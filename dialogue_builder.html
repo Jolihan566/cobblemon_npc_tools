@@ -1,0 +1,3225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cobblemon Dialogue Builder</title>
+<style>
+:root{--bg:#0d0f1a;--panel:#12151f;--panel2:#181c2a;--border:#2a2f45;--accent:#5b8cff;--a2:#ff6b6b;--a3:#52e3a0;--gold:#ffd166;--text:#c8d4f0;--dim:#6b7a9e;--npc-bg:#1e3a5f;--npc-b:#5b8cff;--pl-bg:#1e3a2a;--pl-b:#52e3a0;--ini-bg:#3a1e3a;--ini-b:#c45bff}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,sans-serif;font-size:14px;display:flex;flex-direction:column}
+
+/* TOPBAR */
+#topbar{height:50px;background:var(--panel);border-bottom:2px solid var(--border);display:flex;align-items:center;padding:0 14px;gap:6px;flex-shrink:0;z-index:200}
+/* Collapsible tool group */
+#tb-tools{display:flex;align-items:center;gap:6px;overflow:hidden;max-width:600px;transition:max-width .25s ease,opacity .25s ease}
+#tb-tools.collapsed{max-width:0;opacity:0;pointer-events:none}
+/* Collapse toggle button */
+.tb-collapse{font-size:14px;padding:5px 8px;min-width:28px;transition:all .15s}
+.tb-collapse.collapsed{color:var(--accent);border-color:var(--accent)}
+/* Preview button — always visible, solid gold */
+button.tb-preview,button.tb-preview:link{
+  background:var(--gold);
+  border-color:var(--gold);
+  color:#000;
+  font-weight:800;
+  padding:6px 16px;
+  font-size:13px;
+  letter-spacing:.3px;
+  transition:all .15s;
+  flex-shrink:0;
+}
+button.tb-preview:hover{background:#ffc233;border-color:#ffc233;color:#000}
+button.tb-preview.active{background:#e69900;border-color:#e69900;color:#000;box-shadow:0 0 12px rgba(255,209,102,.55)}
+.logo{font-size:10px;font-weight:900;color:var(--accent);letter-spacing:2px;text-transform:uppercase;line-height:1.4;margin-right:4px}
+.logo b{color:var(--gold)}
+.tsep{width:1px;height:26px;background:var(--border);margin:0 2px}
+#dtabs{display:flex;gap:3px;flex:1;overflow-x:auto;scrollbar-width:none}
+.dtab{background:var(--panel2);border:1px solid var(--border);border-bottom:none;color:var(--dim);font-size:12px;font-weight:700;padding:6px 12px;border-radius:6px 6px 0 0;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:6px;transition:all .15s}
+.dtab.active{background:var(--panel);color:var(--text);border-color:var(--accent)}
+.dtab .xt{opacity:0;font-size:10px;color:var(--a2);cursor:pointer}
+.dtab:hover .xt{opacity:1}
+.tb{background:var(--panel2);border:1px solid var(--border);color:var(--text);font-size:12px;font-weight:700;padding:5px 12px;border-radius:6px;cursor:pointer;transition:all .15s;white-space:nowrap}
+.tb:hover{border-color:var(--accent);color:var(--accent)}
+.tb.ok{border-color:var(--a3);color:var(--a3)}
+.tb.ok:hover{background:rgba(82,227,160,.1)}
+
+/* MAIN */
+#main{flex:1;display:flex;min-height:0;overflow:hidden}
+
+/* SIDEBAR */
+#sb{width:255px;background:var(--panel);border-right:2px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;overflow:hidden}
+.ss{border-bottom:1px solid var(--border);padding:11px}
+.slbl{font-size:9px;font-weight:900;letter-spacing:1.5px;color:var(--dim);text-transform:uppercase;margin-bottom:9px}
+.ab{background:var(--panel2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;font-weight:700;padding:7px 10px;cursor:pointer;display:flex;align-items:center;gap:7px;transition:all .15s;width:100%;text-align:left;margin-bottom:4px}
+.ab:hover{border-color:var(--accent);color:var(--accent)}
+.dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+#dbank{flex:1;overflow-y:auto;padding:9px}
+.bi{background:var(--panel2);border:1px solid var(--border);border-radius:5px;padding:5px 8px;font-size:11px;font-family:monospace;color:var(--gold);cursor:pointer;margin-bottom:4px;display:flex;justify-content:space-between;align-items:center;transition:border-color .15s;word-break:break-all}
+.bi:hover{border-color:var(--gold)}
+.bx{color:var(--a2);cursor:pointer;font-size:10px;opacity:.5;flex-shrink:0;margin-left:4px}
+.bx:hover{opacity:1}
+#adf{display:flex;gap:4px;padding:0 9px 9px}
+#adf input{flex:1;background:var(--panel2);border:1px solid var(--border);border-radius:5px;color:var(--text);font-family:monospace;font-size:11px;padding:4px 7px;outline:none}
+#adf input:focus{border-color:var(--accent)}
+#adf button{background:var(--accent);border:none;border-radius:5px;color:#fff;font-weight:900;padding:4px 9px;cursor:pointer;font-size:15px}
+.leg{font-size:11px;display:flex;flex-direction:column;gap:5px;color:var(--dim)}
+
+/* CANVAS */
+#cw{flex:1;position:relative;overflow:hidden;min-width:0;background:var(--bg)}
+#cw::before{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.018) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.018) 1px,transparent 1px);background-size:32px 32px;pointer-events:none;z-index:0}
+#cv{position:absolute;top:0;left:0;transform-origin:0 0;z-index:1}
+#cv svg{position:absolute;top:0;left:0;width:8000px;height:8000px;pointer-events:none;overflow:visible}
+.dh{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:12px;opacity:.22;pointer-events:none;z-index:2;text-align:center}
+.dh .di{font-size:44px}
+.dh .dm{font-size:10px;font-weight:900;letter-spacing:1.5px;text-transform:uppercase;line-height:1.8}
+#ctrls{position:absolute;bottom:14px;left:14px;display:flex;flex-direction:column;gap:4px;z-index:50}
+.cc{width:30px;height:30px;background:var(--panel);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:border-color .15s}
+.cc:hover{border-color:var(--accent);color:var(--accent)}
+#mm{position:absolute;bottom:14px;right:14px;width:150px;height:90px;background:rgba(18,21,31,.9);border:1px solid var(--border);border-radius:7px;overflow:hidden;z-index:50}
+#mmc{width:100%;height:100%}
+
+/* NODES */
+.node{position:absolute;width:220px;border-radius:9px;border:2px solid var(--border);background:var(--panel);cursor:grab;user-select:none;box-shadow:0 4px 20px rgba(0,0,0,.5)}
+.node.type-npc{border-color:var(--npc-b)}
+.node.type-player{border-color:var(--pl-b)}
+/* INIT BLOCK — wide inline card, not a small node */
+.node.type-init{border-color:var(--ini-b);width:380px;background:var(--panel);box-shadow:0 6px 28px rgba(196,91,255,.18),0 4px 20px rgba(0,0,0,.5)}
+.nh{padding:7px 10px;display:flex;align-items:center;gap:6px;border-radius:7px 7px 0 0}
+.type-npc .nh{background:var(--npc-bg)}.type-player .nh{background:var(--pl-bg)}.type-init .nh{background:var(--ini-bg)}
+.nid{font-family:monospace;font-size:13px;font-weight:700;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nbdg{font-size:9px;font-weight:900;padding:2px 5px;border-radius:3px;letter-spacing:.4px;text-transform:uppercase;flex-shrink:0}
+.bnpc{background:rgba(91,140,255,.2);color:var(--accent)}.bpl{background:rgba(82,227,160,.2);color:var(--a3)}.bini{background:rgba(196,91,255,.2);color:#c45bff}
+.nb{padding:7px 10px;font-size:11px;color:var(--dim);border-top:1px solid var(--border);max-height:68px;overflow:hidden}
+.np{font-family:monospace;font-size:12px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nf{padding:5px 10px;display:flex;gap:3px;flex-wrap:wrap;border-top:1px solid var(--border)}
+.chip{font-size:10px;background:rgba(91,140,255,.1);border:1px solid rgba(91,140,255,.25);border-radius:3px;padding:1px 5px;color:var(--accent);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
+.chip.g{background:rgba(255,209,102,.1);border-color:rgba(255,209,102,.25);color:var(--gold)}
+.nedit{position:absolute;top:5px;right:5px;background:rgba(0,0,0,.4);border:none;border-radius:3px;color:var(--dim);cursor:pointer;font-size:12px;padding:1px 5px;opacity:0;transition:opacity .15s}
+.node:hover .nedit{opacity:1}.nedit:hover{color:var(--accent)}
+/* ── PORT DOTS (output wire handles) ── */
+.port-out{position:absolute;right:-7px;width:12px;height:12px;border-radius:50%;border:2px solid var(--panel);cursor:crosshair;z-index:20;transform:translateY(-50%);transition:transform .1s,box-shadow .1s}
+.port-out:hover{transform:translateY(-50%) scale(1.35);box-shadow:0 0 0 3px rgba(255,255,255,.15)}
+/* ── LIVE WIRE (during drag) ── */
+#wire-path{stroke:#fff;stroke-width:2;stroke-dasharray:6 4;fill:none;opacity:.85}
+/* Init block inner sections */
+.ini-meta{padding:7px 12px 5px;display:flex;gap:14px;border-top:1px solid var(--border);font-size:11px;color:var(--dim)}
+.ini-meta-item{display:flex;align-items:center;gap:5px}
+.ini-meta-item b{color:var(--text);font-weight:700}
+.ini-actions{padding:4px 10px 8px;display:flex;flex-direction:column;gap:4px}
+.ini-row{display:flex;align-items:stretch;gap:0;border-radius:5px;overflow:hidden;border:1px solid rgba(255,255,255,.06);font-size:11px;background:rgba(0,0,0,.18)}
+.ini-row-num{width:22px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:900;color:#fff;flex-shrink:0}
+.ini-row-body{flex:1;padding:5px 8px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.ini-row-cond{font-family:monospace;font-size:10px;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ini-row-cond em{color:var(--gold);font-style:normal}
+.ini-row-target{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:700}
+.ini-row-target .arr{color:#c45bff;flex-shrink:0;font-size:10px}
+.ini-row-target .pg{font-family:monospace;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ini-row-type{font-size:9px;font-weight:900;padding:1px 5px;border-radius:3px;flex-shrink:0;text-transform:uppercase;letter-spacing:.4px}
+.ini-type-cond{background:rgba(255,209,102,.15);color:var(--gold)}
+.ini-type-always{background:rgba(82,227,160,.12);color:var(--a3)}
+.ini-type-raw{background:rgba(91,140,255,.12);color:var(--accent)}
+.ini-row-raw{font-family:monospace;font-size:10px;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ini-empty{padding:8px 12px;font-size:11px;color:var(--dim);font-style:italic;border-top:1px solid var(--border);text-align:center}
+.ini-add-btn{margin:0 10px 8px;background:none;border:1px dashed rgba(196,91,255,.3);border-radius:5px;color:#c45bff;font-size:11px;font-weight:700;padding:5px;cursor:pointer;width:calc(100% - 20px);transition:all .15s}
+.ini-add-btn:hover{border-color:#c45bff;background:rgba(196,91,255,.08)}
+
+/* CONNECTIONS */
+.cl{stroke-width:2;fill:none;opacity:.85}
+.cc2{stroke:var(--a2)}.ci{stroke:#c45bff;stroke-dasharray:5 3}.ce{stroke:var(--gold);stroke-dasharray:5 3}
+
+/* EDITOR */
+#ed{width:340px;background:var(--panel);border-left:2px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;overflow:hidden;transition:width .22s;position:relative;min-width:0}
+#ed.hidden{width:0;border:none;overflow:hidden}
+#ed.expanded{width:620px}
+/* left resize handle */
+#ed-resize{position:absolute;left:0;top:0;bottom:0;width:5px;cursor:ew-resize;z-index:10;background:transparent;transition:background .15s}
+#ed-resize:hover,#ed-resize.dragging{background:var(--accent)}
+#ei{flex:1;overflow-y:auto;padding:14px;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+.etit{font-size:9px;font-weight:900;letter-spacing:1.5px;color:var(--accent);text-transform:uppercase;margin-bottom:13px;padding-bottom:9px;border-bottom:1px solid var(--border)}
+.fg{margin-bottom:11px}
+.fl{font-size:10px;font-weight:700;letter-spacing:.3px;color:var(--dim);text-transform:uppercase;margin-bottom:4px;display:flex;align-items:center;justify-content:space-between}
+.fh{font-size:10px;color:var(--dim);font-weight:400;text-transform:none}
+input[type=text],input[type=number],textarea,select{width:100%;background:var(--panel2);border:1px solid var(--border);border-radius:5px;color:var(--text);font-family:system-ui,sans-serif;font-size:13px;padding:6px 8px;outline:none;resize:vertical;transition:border-color .15s}
+textarea{min-height:50px;font-family:monospace;font-size:12px}
+input:focus,textarea:focus,select:focus{border-color:var(--accent)}
+select option{background:var(--panel2)}
+.mono{font-family:monospace;font-size:12px}
+.r2{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.hint{font-size:10px;color:var(--dim);margin-top:3px;font-style:italic}
+.as{background:none;border:1px dashed var(--border);border-radius:5px;color:var(--dim);font-size:12px;font-weight:700;padding:5px;cursor:pointer;width:100%;transition:all .15s}
+.as:hover{border-color:var(--accent);color:var(--accent)}
+.li{background:var(--panel2);border:1px solid var(--border);border-radius:5px;padding:7px;position:relative;margin-bottom:5px}
+.li textarea{min-height:42px}
+.lrm{position:absolute;top:5px;right:5px;background:none;border:none;color:var(--a2);cursor:pointer;font-size:12px}
+.oi{background:var(--panel2);border:1px solid var(--border);border-radius:5px;padding:9px;position:relative;margin-bottom:6px}
+.oi .fg{margin-bottom:7px}
+.orm{position:absolute;top:5px;right:5px;background:none;border:none;color:var(--a2);cursor:pointer;font-size:12px}
+.stog{background:var(--panel2);border:1px solid var(--border);border-radius:5px;color:var(--text);font-size:12px;font-weight:700;padding:6px 9px;cursor:pointer;width:100%;text-align:left;margin-bottom:7px;display:flex;align-items:center;justify-content:space-between;transition:border-color .15s}
+.stog:hover{border-color:var(--accent)}
+.col{display:none}.col.open{display:block}
+.crow{display:flex;gap:3px;flex-wrap:wrap;margin-top:4px}
+.ccb{width:20px;height:20px;border-radius:3px;cursor:pointer;border:2px solid transparent;font-size:10px;display:flex;align-items:center;justify-content:center;font-weight:900;transition:all .1s;flex-shrink:0}
+.ccb:hover{border-color:#fff;transform:scale(1.1)}
+.srow{background:var(--panel2);border:1px solid var(--border);border-radius:5px;padding:9px;margin-bottom:7px}
+.srt{font-weight:700;font-size:12px;margin-bottom:7px}
+.ia{display:flex;gap:5px;align-items:flex-start;margin-bottom:5px}
+.ia textarea{min-height:34px;font-size:12px}
+.ia button{background:none;border:none;color:var(--a2);cursor:pointer;font-size:15px;padding:5px;flex-shrink:0}
+/* Init action visual cards */
+.ia-card{background:var(--panel2);border:1px solid var(--border);border-radius:7px;padding:11px 13px;margin-bottom:8px;position:relative;transition:border-color .15s}
+.ia-card:hover{border-color:var(--accent)}
+.ia-card-head{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.ia-card-type{font-size:9px;font-weight:900;letter-spacing:.8px;text-transform:uppercase;padding:3px 7px;border-radius:3px;flex-shrink:0}
+.ia-type-cond{background:rgba(255,209,102,.15);color:var(--gold);border:1px solid rgba(255,209,102,.3)}
+.ia-type-always{background:rgba(82,227,160,.12);color:var(--a3);border:1px solid rgba(82,227,160,.25)}
+.ia-type-raw{background:rgba(91,140,255,.12);color:var(--accent);border:1px solid rgba(91,140,255,.25)}
+.ia-card-target{font-size:11px;font-weight:700;color:var(--text);font-family:monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+.ia-card-arrow{font-size:13px;color:var(--accent);flex-shrink:0}
+.ia-card-cond{font-size:12px;font-family:monospace;color:var(--dim);background:rgba(0,0,0,.2);border-radius:4px;padding:5px 9px;margin-bottom:8px;word-break:break-all;line-height:1.6}
+.ia-card-cond em{color:var(--gold);font-style:normal}
+.ia-card-raw{width:100%;background:rgba(0,0,0,.15);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:monospace;font-size:12px;padding:6px 8px;outline:none;resize:vertical;min-height:52px;line-height:1.6;transition:border-color .15s}
+.ia-card-raw:focus{border-color:var(--accent)}
+.ia-card-rm{position:absolute;top:9px;right:9px;background:none;border:none;color:var(--a2);cursor:pointer;font-size:13px;opacity:.5;transition:opacity .15s}
+.ia-card-rm:hover{opacity:1}
+.ia-card-num{width:22px;height:22px;border-radius:50%;color:#fff;font-size:9px;font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+/* Entry-point stripe colours — cycling palette */
+.ia-card[data-ia="0"]{border-left:3px solid #5b8cff}
+.ia-card[data-ia="1"]{border-left:3px solid #52e3a0}
+.ia-card[data-ia="2"]{border-left:3px solid #ffd166}
+.ia-card[data-ia="3"]{border-left:3px solid #ff6b6b}
+.ia-card[data-ia="4"]{border-left:3px solid #c45bff}
+.ia-card[data-ia="5"]{border-left:3px solid #38bdf8}
+.ia-card[data-ia="6"]{border-left:3px solid #fb923c}
+.ia-card[data-ia="7"]{border-left:3px solid #e879f9}
+.ia-card-num[data-n="0"]{background:#5b8cff}
+.ia-card-num[data-n="1"]{background:#52e3a0}
+.ia-card-num[data-n="2"]{background:#ffd166;color:#000}
+.ia-card-num[data-n="3"]{background:#ff6b6b}
+.ia-card-num[data-n="4"]{background:#c45bff}
+.ia-card-num[data-n="5"]{background:#38bdf8;color:#000}
+.ia-card-num[data-n="6"]{background:#fb923c;color:#000}
+.ia-card-num[data-n="7"]{background:#e879f9}
+/* expand button in settings header */
+.etit-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:13px;padding-bottom:9px;border-bottom:1px solid var(--border)}
+.etit-row .etit{margin:0;padding:0;border:none}
+.expand-btn{background:var(--panel2);border:1px solid var(--border);border-radius:4px;color:var(--dim);font-size:11px;font-weight:700;padding:4px 9px;cursor:pointer;transition:all .15s;white-space:nowrap}
+.expand-btn:hover{border-color:var(--accent);color:var(--accent)}
+.expand-btn.active{border-color:var(--accent);background:rgba(91,140,255,.12);color:var(--accent)}
+#ef{padding:10px 14px;border-top:1px solid var(--border);display:flex;gap:7px}
+#ef button{flex:1;background:var(--accent);border:none;border-radius:5px;color:#fff;font-weight:700;font-size:13px;padding:8px;cursor:pointer;transition:opacity .15s}
+#ef button:hover{opacity:.85}
+.delbtn{flex:0!important;padding:8px 12px!important;background:rgba(255,107,107,.15)!important;color:var(--a2)!important;border:1px solid rgba(255,107,107,.3)!important;border-radius:5px}
+
+/* MODALS */
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:1000;align-items:center;justify-content:center}
+.modal.open{display:flex}
+.mbox{background:var(--panel);border:2px solid var(--accent);border-radius:10px;width:680px;max-width:95vw;max-height:85vh;display:flex;flex-direction:column;box-shadow:0 16px 64px rgba(0,0,0,.8)}
+.mh{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.mt{font-size:9px;font-weight:900;letter-spacing:1.5px;color:var(--accent);text-transform:uppercase}
+.mx{background:none;border:none;color:var(--dim);cursor:pointer;font-size:18px}
+.mx:hover{color:var(--a2)}
+.mb{flex:1;overflow-y:auto;padding:14px}
+.mb pre{font-family:monospace;font-size:13px;color:var(--a3);white-space:pre-wrap;word-break:break-all;line-height:1.5}
+.mf{padding:10px 16px;border-top:1px solid var(--border);display:flex;gap:7px;justify-content:flex-end}
+
+/* CONTEXT MENU */
+#ctx{position:fixed;z-index:500;background:var(--panel);border:1px solid var(--border);border-radius:7px;padding:4px;min-width:175px;box-shadow:0 8px 32px rgba(0,0,0,.6);display:none}
+#ctx.open{display:block;animation:cxi .1s ease}
+@keyframes cxi{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:scale(1)}}
+.ci2{display:flex;align-items:center;gap:9px;padding:7px 11px;border-radius:4px;font-size:12px;font-weight:700;color:var(--text);cursor:pointer;transition:background .1s;user-select:none}
+.ci2:hover{background:rgba(91,140,255,.12);color:var(--accent)}
+.ci2.danger:hover{background:rgba(255,107,107,.12);color:var(--a2)}
+.ci2 .ico{font-size:14px;width:16px;text-align:center}
+.csep{height:1px;background:var(--border);margin:3px 7px}
+.clbl{padding:3px 11px 2px;font-size:9px;font-weight:900;letter-spacing:.8px;color:var(--dim);text-transform:uppercase}
+
+/* TOAST */
+#toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(70px);background:var(--panel);border:1px solid var(--a3);border-radius:7px;color:var(--a3);font-weight:700;padding:9px 18px;font-size:13px;transition:transform .3s;z-index:2000;pointer-events:none}
+#toast.show{transform:translateX(-50%) translateY(0)}
+/* ── PREVIEW PANEL ── */
+#prev-panel{width:520px;background:#1a1e2e;border-left:2px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;overflow:hidden;transition:width .2s}
+#prev-panel.hidden{width:0;border:none}
+#prev-inner{flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0}
+#prev-head{padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.prev-title{font-size:9px;font-weight:900;letter-spacing:1.5px;color:var(--accent);text-transform:uppercase}
+.prev-controls{display:flex;align-items:center;gap:8px}
+.prev-ctrl{background:var(--panel2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:11px;font-weight:700;padding:4px 9px;cursor:pointer;transition:all .15s}
+.prev-ctrl:hover{border-color:var(--accent);color:var(--accent)}
+.prev-ctrl.active{border-color:var(--accent);background:rgba(91,140,255,.15);color:var(--accent)}
+#prev-page-sel{background:var(--panel2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:11px;padding:3px 7px;outline:none;max-width:160px}
+/* the MC game screen area */
+#prev-screen{flex:1;overflow-y:auto;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding:20px 16px;background:linear-gradient(135deg,#2a3a4a 0%,#1a2530 50%,#0d1820 100%);position:relative;min-height:0}
+/* warnings strip */
+#prev-warn{padding:0 14px;flex-shrink:0}
+.pw{margin:4px 0;padding:5px 10px;border-radius:4px;font-size:11px;font-weight:700;display:flex;align-items:center;gap:7px}
+.pw.err{background:rgba(255,107,107,.15);border:1px solid rgba(255,107,107,.4);color:var(--a2)}
+.pw.warn{background:rgba(255,209,102,.1);border:1px solid rgba(255,209,102,.3);color:var(--gold)}
+.pw.ok{background:rgba(82,227,160,.1);border:1px solid rgba(82,227,160,.3);color:var(--a3)}
+
+/* ── MC DIALOGUE UI ── */
+.mc-wrap{width:460px;position:relative;font-family:'Courier New',monospace;user-select:none}
+/* portrait area */
+.mc-portrait-wrap{position:absolute;top:-8px;z-index:10;transition:left .3s,right .3s}
+.mc-portrait-wrap.left{left:-4px}
+.mc-portrait-wrap.right{right:-4px}
+.mc-portrait-bg{width:72px;height:72px;image-rendering:pixelated;display:block}
+.mc-portrait-frame{position:absolute;top:0;left:0;width:72px;height:72px;image-rendering:pixelated}
+.mc-portrait-skin{position:absolute;top:8px;left:8px;width:56px;height:56px;image-rendering:pixelated;border-radius:2px}
+/* name bar */
+.mc-namebar{width:100%;height:18px;image-rendering:pixelated;display:flex;align-items:center;justify-content:center;position:relative;margin-bottom:2px}
+.mc-namebar img{position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated}
+.mc-namebar-text{position:relative;z-index:1;font-size:11px;font-weight:700;color:#fff;text-shadow:1px 1px 0 #000;letter-spacing:.5px;display:flex;align-items:center;gap:4px}
+.mc-coin{width:14px;height:14px;background:radial-gradient(circle at 35% 35%,#ffd76e,#c87a00);border-radius:50%;border:1px solid #8b5500;flex-shrink:0}
+/* main dialogue box */
+.mc-box{width:100%;min-height:110px;position:relative;display:flex;flex-direction:column}
+.mc-box-bg{position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated}
+.mc-box-content{position:relative;z-index:1;padding:10px 16px 10px 80px;min-height:110px;display:flex;flex-direction:column;justify-content:center}
+.mc-box-content.player-right{padding:10px 80px 10px 16px}
+.mc-text{font-size:12px;color:#1a1a1a;line-height:1.55;white-space:pre-wrap;min-height:50px;font-family:'Courier New',monospace}
+.mc-text.info-mode{color:#e8e8e8}
+.mc-cursor{display:inline-block;width:7px;height:13px;background:#333;animation:blink .6s steps(1) infinite;vertical-align:text-bottom}
+.mc-cursor.info{background:#ccc}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+/* bottom section */
+.mc-bottom{margin-top:3px;width:100%}
+/* options */
+.mc-options{display:flex;flex-direction:column;gap:3px;width:100%}
+.mc-options.horizontal{flex-direction:row;flex-wrap:wrap;gap:4px}
+.mc-btn{
+  position:relative;height:30px;cursor:pointer;width:100%;
+  display:flex;align-items:center;justify-content:center;
+  background:#5a5a5a;
+  border:2px solid #888;
+  border-bottom-color:#333;border-right-color:#333;
+  border-top-color:#aaa;border-left-color:#aaa;
+  image-rendering:pixelated;
+  transition:background .08s,filter .08s;
+  box-sizing:border-box;
+}
+.mc-options.horizontal .mc-btn{flex:1;min-width:80px}
+.mc-btn:hover{background:#7a7a7a;filter:brightness(1.15)}
+.mc-btn:active{background:#3a3a3a;border-top-color:#333;border-left-color:#333;border-bottom-color:#aaa;border-right-color:#aaa}
+.mc-btn img.btn-bg{display:none}
+.mc-btn-txt{position:relative;z-index:1;font-size:11px;font-weight:700;color:#fff;text-shadow:1px 1px 0 #000,0 0 4px rgba(0,0,0,.5);letter-spacing:.3px;padding:0 8px;text-align:center}
+/* button tooltip */
+.mc-btn-tip{
+  display:none;position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);
+  background:#1a1a2e;border:1px solid rgba(255,255,255,.15);border-radius:5px;
+  padding:6px 10px;min-width:140px;max-width:240px;z-index:50;
+  pointer-events:none;text-align:left;white-space:normal;
+  box-shadow:0 4px 14px rgba(0,0,0,.7);
+}
+.mc-btn:hover .mc-btn-tip{display:block}
+.mc-btn-tip-dest{font-size:10px;font-weight:700;color:#a78bfa;letter-spacing:.3px;margin-bottom:3px}
+.mc-btn-tip-line{font-size:10px;color:rgba(255,255,255,.65);line-height:1.45;font-family:'Courier New',monospace}
+/* text input field */
+.mc-input-area{width:100%;position:relative;height:26px;display:flex;align-items:center}
+.mc-input-area img{position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated;object-fit:fill}
+.mc-input-hint{position:relative;z-index:1;font-size:11px;color:#aaa;padding:0 8px;font-style:italic}
+/* auto-continue timer */
+.mc-timer-wrap{width:100%;position:relative;height:6px;margin-top:2px}
+.mc-timer-track{position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated;object-fit:fill}
+.mc-timer-fill{position:absolute;inset:0;height:100%;background:rgba(91,140,255,.7);transition:width .1s linear;border-radius:1px}
+/* none-input click cue */
+.mc-click-cue{text-align:right;font-size:10px;color:#888;margin-top:3px;font-family:monospace}
+/* placeholder skin SVG */
+.skin-placeholder{width:56px;height:56px;image-rendering:pixelated}
+/* nav */
+.prev-nav{display:flex;gap:6px;justify-content:center;margin-top:10px;flex-wrap:wrap}
+.prev-nav-btn{background:rgba(91,140,255,.15);border:1px solid rgba(91,140,255,.3);border-radius:4px;color:var(--accent);font-size:10px;font-weight:700;padding:4px 10px;cursor:pointer;transition:all .15s}
+.prev-nav-btn:hover{background:rgba(91,140,255,.3)}
+/* ── LINK PORTS & SOCKETS ── */
+.node-ports{position:absolute;right:-8px;top:0;bottom:0;display:flex;flex-direction:column;justify-content:space-around;pointer-events:none;z-index:20}
+.port{width:14px;height:14px;border-radius:50%;border:2px solid var(--bg);cursor:crosshair;pointer-events:all;flex-shrink:0;transition:transform .12s,box-shadow .12s;position:relative}
+.port:hover,.port.active{transform:scale(1.3);box-shadow:0 0 0 3px rgba(255,255,255,.2)}
+.port.npc{background:var(--accent)}
+.port.player{background:var(--a3)}
+.port.none{background:var(--dim)}
+.port.escape{background:var(--gold)}
+/* Disconnected (no current target) — hollow with dashed border */
+.port.disconnected{background:transparent!important;border:2px dashed currentColor;opacity:.55}
+.port.disconnected.npc{color:var(--accent)}
+.port.disconnected.player{color:var(--a3)}
+.port.disconnected.none{color:var(--dim)}
+.port.disconnected:hover,.port.disconnected.active{opacity:1;background:rgba(255,255,255,.1)!important}
+.socket{position:absolute;left:-8px;top:50%;transform:translateY(-50%);width:14px;height:14px;border-radius:50%;border:2px solid var(--bg);pointer-events:all;z-index:20;cursor:crosshair;transition:transform .12s,box-shadow .12s}
+.socket.npc{background:var(--accent)}
+.socket.player{background:var(--a3)}
+.socket.none{background:var(--dim)}
+.socket:hover,.socket.drop-target{transform:scale(1.4);box-shadow:0 0 0 4px rgba(255,255,255,.25)}
+/* wire being dragged */
+#wire-drag{position:fixed;pointer-events:none;z-index:900;display:none}
+#wire-drag.active{display:block}
+/* node highlighted as drop target */
+.node.drop-target{box-shadow:0 0 0 3px #fff,0 0 18px rgba(255,255,255,.3)!important}
+/* speaker-coloured connection lines */
+.cn-npc-npc{stroke:#5b8cff}
+.cn-npc-pl{stroke:#a78bfa}
+.cn-pl-npc{stroke:#34d399}
+.cn-pl-pl{stroke:#52e3a0}
+
+.node.expanded{width:340px}
+.node.expanded.type-npc{border-color:var(--npc-b)}
+.node.expanded.type-player{border-color:var(--pl-b)}
+.exp-lines{padding:6px 10px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:3px}
+.exp-line{font-size:11px;color:var(--text);line-height:1.5;word-break:break-word}
+.exp-line.expr{color:var(--a3);font-family:monospace;font-size:10px}
+.exp-line em{color:var(--dim);font-style:normal;font-size:10px}
+.exp-opts{padding:5px 10px 6px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:3px}
+.exp-opt{display:flex;align-items:center;gap:5px;font-size:11px;border-radius:4px;padding:3px 6px;background:rgba(0,0,0,.2)}
+.exp-opt .oa{color:#c45bff;font-size:10px;flex-shrink:0}
+.exp-opt .ol{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text)}
+.exp-opt .ot{font-family:monospace;font-size:10px;color:var(--a3);flex-shrink:0}
+.exp-opt .oc{font-family:monospace;font-size:10px;color:var(--a2);flex-shrink:0}
+.exp-ac{padding:5px 10px 6px;border-top:1px solid var(--border)}
+.exp-ac-bar{height:5px;border-radius:3px;background:linear-gradient(90deg,var(--accent),#c45bff);margin-bottom:4px;opacity:.5}
+.exp-ac-lbl{font-size:10px;color:var(--dim)}
+.exp-meta{padding:5px 10px 6px;border-top:1px solid var(--border);display:flex;flex-wrap:wrap;gap:4px}
+.exp-tag{font-size:9px;font-weight:700;padding:2px 6px;border-radius:10px}
+.exp-tag.esc{background:rgba(255,209,102,.12);color:var(--gold)}
+.exp-tag.cmd{background:rgba(168,85,247,.12);color:#c45bff}
+.exp-tag.flag{background:rgba(82,227,160,.12);color:var(--a3)}
+.exp-tag.gb{background:rgba(91,140,255,.12);color:var(--accent)}
+.exp-input-lbl{padding:5px 10px 2px;border-top:1px solid var(--border);font-size:9px;font-weight:900;letter-spacing:.6px;text-transform:uppercase;color:var(--dim)}
+
+#node-tip{position:fixed;z-index:600;pointer-events:none;display:none;max-width:300px}
+#node-tip.show{display:block}
+.ntip{background:#0d0f1a;border:1px solid var(--border);border-radius:8px;box-shadow:0 8px 28px rgba(0,0,0,.7);overflow:hidden;animation:tip-in .12s ease}
+@keyframes tip-in{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+.ntip-head{padding:8px 12px 6px;display:flex;align-items:center;gap:7px;border-bottom:1px solid var(--border)}
+.ntip-id{font-family:monospace;font-size:13px;font-weight:700;color:var(--text);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ntip-spk{font-size:9px;font-weight:900;padding:2px 6px;border-radius:3px;text-transform:uppercase;letter-spacing:.5px;flex-shrink:0}
+.ntip-spk.npc{background:rgba(91,140,255,.2);color:var(--accent)}
+.ntip-spk.player{background:rgba(82,227,160,.2);color:var(--a3)}
+.ntip-spk.none{background:rgba(255,255,255,.08);color:var(--dim)}
+.ntip-lines{padding:7px 12px;border-bottom:1px solid var(--border);max-height:80px;overflow:hidden}
+.ntip-line{font-size:11px;color:var(--text);line-height:1.5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;opacity:.9}
+.ntip-line.expr{color:var(--a3);font-family:monospace;font-size:10px}
+.ntip-meta{padding:6px 12px;display:flex;flex-wrap:wrap;gap:5px}
+.ntip-tag{font-size:10px;font-weight:700;padding:2px 7px;border-radius:12px}
+.ntip-tag.inp{background:rgba(91,140,255,.15);color:var(--accent)}
+.ntip-tag.opts{background:rgba(255,209,102,.12);color:var(--gold)}
+.ntip-tag.close{background:rgba(255,107,107,.12);color:var(--a2)}
+.ntip-tag.esc{background:rgba(255,209,102,.12);color:var(--gold)}
+.ntip-tag.cond{background:rgba(168,85,247,.15);color:#c45bff}
+.ntip-tag.mc{background:rgba(34,197,94,.12);color:var(--a3)}
+.ntip-opts{padding:0 12px 7px;display:flex;flex-direction:column;gap:3px}
+.ntip-opt{font-size:11px;color:var(--dim);display:flex;align-items:center;gap:5px;white-space:nowrap;overflow:hidden}
+.ntip-opt .arrow{color:var(--accent);flex-shrink:0;font-size:10px}
+.ntip-opt .lbl{overflow:hidden;text-overflow:ellipsis;flex:1}
+.ntip-opt .tgt{font-family:monospace;font-size:10px;color:var(--a3);flex-shrink:0}
+
+#mm-warning{display:none;position:fixed;bottom:24px;right:24px;z-index:3000;width:320px;background:#1a1a2e;border:1px solid #f59e0b;border-radius:10px;box-shadow:0 8px 32px rgba(0,0,0,.7)}
+#mm-warning.open{display:block;animation:mm-in .2s ease}
+@keyframes mm-in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.mm-head{display:flex;align-items:center;gap:10px;padding:12px 14px 8px;border-bottom:1px solid rgba(245,158,11,.2)}
+.mm-icon{font-size:18px;flex-shrink:0}
+.mm-title{font-size:12px;font-weight:800;color:#fbbf24;letter-spacing:.3px}
+.mm-body{padding:10px 14px;font-size:12px;color:rgba(255,255,255,.75);line-height:1.6}
+.mm-body a{color:#60a5fa;text-decoration:none;font-weight:700}
+.mm-body a:hover{text-decoration:underline}
+.mm-foot{display:flex;gap:8px;padding:0 14px 12px}
+.mm-btn{flex:1;border:none;border-radius:5px;font-size:11px;font-weight:800;padding:7px;cursor:pointer;transition:opacity .15s}
+.mm-btn:hover{opacity:.85}
+.mm-btn.ok{background:#f59e0b;color:#000}
+.mm-btn.dismiss{background:rgba(255,255,255,.08);color:rgba(255,255,255,.55)}
+
+/* ── THEME ── */
+body.theme-light{--bg:#f0f0f0;--panel:#e4e4e4;--panel2:#d8d8d8;--text:#111;--dim:#555;--border:#bbb}
+/* ── GRID SNAP overlay ── */
+#cv.snap-grid{background-image:linear-gradient(rgba(255,255,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.03) 1px,transparent 1px);background-size:40px 40px}
+/* ── NODE COLOUR TAGS ── */
+.node.tag-done .nh{border-left:3px solid #22c55e}
+.node.tag-review .nh{border-left:3px solid #f59e0b}
+.node.tag-branch .nh{border-left:3px solid #a855f7}
+/* ── VALIDATION PANEL ── */
+#val-panel{position:absolute;bottom:54px;right:14px;background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:10px 13px;max-width:300px;font-size:11px;z-index:200;max-height:200px;overflow-y:auto;display:none;box-shadow:0 4px 18px rgba(0,0,0,.5)}
+#val-panel.open{display:block}
+.val-item{display:flex;align-items:flex-start;gap:7px;padding:3px 0;border-bottom:1px solid var(--border)}
+.val-item:last-child{border:none}
+.val-icon{flex-shrink:0;font-size:13px}
+.val-msg{color:var(--text);line-height:1.4}
+.val-ok{color:var(--a3);font-weight:700;font-size:12px}
+/* ── BULK SELECT ── */
+#sel-rect{position:absolute;border:1.5px dashed var(--accent);background:rgba(91,140,255,.08);pointer-events:none;z-index:400;display:none}
+.node.bulk-selected{box-shadow:0 0 0 2px var(--accent),0 4px 20px rgba(0,0,0,.5)!important}
+/* ── KEYBOARD HINT ── */
+#kb-hint{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.6);color:rgba(255,255,255,.5);font-size:9px;border-radius:4px;padding:3px 8px;pointer-events:none;opacity:0;transition:opacity .3s;white-space:nowrap}
+#kb-hint.show{opacity:1}
+/* ── SKIN PORTRAIT ── */
+.mc-portrait-skin img.skin-render{width:56px;height:56px;image-rendering:pixelated;object-fit:cover}
+/* ── FLAG SIMULATOR ── */
+#flag-sim{padding:8px 12px;border-top:1px solid var(--border);font-size:11px}
+#flag-sim .slbl{margin-bottom:6px}
+.fs-row{display:flex;align-items:center;gap:6px;margin-bottom:4px}
+.fs-row label{flex:1;font-size:11px;font-family:monospace;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fs-toggle{position:relative;width:28px;height:16px;flex-shrink:0}
+.fs-toggle input{opacity:0;width:0;height:0;position:absolute}
+.fs-slider{position:absolute;inset:0;border-radius:8px;background:var(--border);cursor:pointer;transition:background .15s}
+.fs-slider:before{content:'';position:absolute;width:12px;height:12px;left:2px;top:2px;border-radius:50%;background:#fff;transition:transform .15s}
+.fs-toggle input:checked+.fs-slider{background:var(--a3)}
+.fs-toggle input:checked+.fs-slider:before{transform:translateX(12px)}
+/* ── FIND/REPLACE ── */
+#fr-bar{display:none;position:absolute;top:54px;right:14px;background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:10px;z-index:300;width:300px;box-shadow:0 4px 18px rgba(0,0,0,.5)}
+#fr-bar.open{display:block}
+#fr-bar .fg{margin-bottom:7px}
+#fr-bar input{font-size:12px}
+#fr-bar .fr-btns{display:flex;gap:6px}
+#fr-bar .fr-btns button{flex:1;font-size:11px;background:var(--panel2);border:1px solid var(--border);border-radius:4px;color:var(--text);padding:5px;cursor:pointer;transition:border-color .15s}
+#fr-bar .fr-btns button:hover{border-color:var(--accent);color:var(--accent)}
+#fr-count{font-size:10px;color:var(--dim);margin-top:4px;height:14px}
+/* ── BREADCRUMB ── */
+#prev-crumb{padding:4px 14px;font-size:10px;color:var(--dim);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:4px;flex-wrap:wrap;min-height:24px;flex-shrink:0}
+.crumb{color:var(--accent);cursor:pointer;font-weight:700}
+.crumb:hover{text-decoration:underline}
+.crumb-sep{opacity:.4}
+/* ── MOLANG HIGHLIGHT ── */
+.mono.mh-wrap .mh-q{color:#93c5fd}.mono.mh-wrap .mh-str{color:#86efac}.mono.mh-wrap .mh-op{color:#fbbf24}
+/* ── AUDIO INDICATOR ── */
+#audio-dot{width:8px;height:8px;border-radius:50%;background:var(--a3);display:inline-block;margin-left:4px;opacity:0;transition:opacity .1s}
+#audio-dot.ping{opacity:1}
+/* ── FIT VIEW btn ── */
+.cc.fit{font-size:11px;width:auto;padding:0 7px}
+/* ── AUTOSAVE dot ── */
+#as-dot{width:7px;height:7px;border-radius:50%;background:var(--a3);display:inline-block;margin-left:5px;opacity:0;transition:opacity .4s;vertical-align:middle}
+#as-dot.saved{opacity:1}
+</style>
+</head>
+<body>
+
+<!-- MINIMESSAGE WARNING POPUP -->
+<div id="mm-warning">
+  <div class="mm-head">
+    <span class="mm-icon">⚠</span>
+    <span class="mm-title">MiniMessage detected</span>
+  </div>
+  <div class="mm-body">
+    MiniMessage tags like <code>&lt;red&gt;</code>, <code>&lt;gradient:...&gt;</code> and <code>&lt;#hex&gt;</code> require <strong>Dialogue Extras</strong> to render in-game.<br><br>
+    Make sure you have it installed: <a href="https://mods.briar.rocks" target="_blank">mods.briar.rocks</a>
+  </div>
+  <div class="mm-foot">
+    <button class="mm-btn ok" onclick="closeMMWarning(false)">Got it</button>
+    <button class="mm-btn dismiss" onclick="closeMMWarning(true)">Don't show again</button>
+  </div>
+</div>
+
+<div id="topbar">
+  <div class="logo">COBBLEMON<br><b>DIALOGUE</b> BUILDER</div>
+  <div class="tsep"></div>
+  <div id="dtabs"></div>
+  <div class="tsep"></div>
+  <button class="tb" onclick="newDialogue();renderCanvas()" title="New dialogue">＋ New</button>
+  <div id="tb-tools">
+    <div class="tsep" style="margin:0 2px"></div>
+    <button class="tb" onclick="openModal('imp-modal')" title="Import JSON">📥 Import</button>
+    <button class="tb ok" onclick="doExport()" title="Export JSON">📤 Export</button>
+    <button class="tb" onclick="autoLayout()" title="Auto-layout nodes">⬡ Layout</button>
+    <button class="tb" onclick="fitView()" title="Fit all nodes in view">⊠ Fit</button>
+    <button class="tb" onclick="toggleFR()" title="Find &amp; Replace (Ctrl+H)">⇄ Find</button>
+    <button class="tb" onclick="exportZip()" title="Export all tabs as ZIP">⬇ ZIP</button>
+    <button class="tb" onclick="toggleTheme()" id="theme-btn" title="Toggle light/dark">◑ Theme</button>
+  </div>
+  <button class="tb tb-collapse" id="tb-collapse-btn" onclick="toggleToolbar()" title="Collapse toolbar">‹‹</button>
+  <div style="flex:1"></div>
+  <span id="as-dot" title="Autosaved"></span>
+  <button class="tb tb-preview" id="prev-btn" onclick="togglePreview()">👁 Preview</button>
+</div>
+
+<div id="main">
+  <div id="sb">
+    <div class="ss">
+      <div class="slbl">Add Page</div>
+      <button class="ab" onclick="addPage('npc')"><span class="dot" style="background:var(--accent)"></span>NPC Page</button>
+      <button class="ab" onclick="addPage('player')"><span class="dot" style="background:var(--a3)"></span>Player Page</button>
+      <button class="ab" onclick="editSettings()"><span class="dot" style="background:#c45bff"></span>Init / Settings</button>
+    </div>
+    <div class="ss"><div class="slbl">q.player.data Bank</div><div id="dbank"></div><div id="adf"><input type="text" id="ndk" placeholder="dialogue.my_flag"/><button onclick="addDK()">+</button></div></div>
+    <div id="flag-sim" class="ss">
+      <div class="slbl">Flag Simulator <span style="font-size:9px;color:var(--dim);font-weight:400">(affects init routing)</span></div>
+      <div id="fs-flags"></div>
+      <button class="ab" style="margin-top:6px" onclick="simRoute()">▶ Simulate Route</button>
+    </div>
+    <div class="ss" style="border:none;flex:1">
+      <div class="slbl">Legend</div>
+      <div class="leg">
+        <div style="color:#5b8cff">─── NPC → NPC</div>
+        <div style="color:#a78bfa">─── NPC → Player</div>
+        <div style="color:#34d399">─── Player → NPC</div>
+        <div style="color:#52e3a0">─── Player → Player</div>
+        <div style="color:#c45bff">- - - Init routing</div>
+        <div style="color:var(--a2)">─── Close</div>
+        <div style="color:var(--gold)">- - - Escape</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="cw">
+    <div id="cv"><svg id="svg"></svg></div>
+    <div class="dh" id="dh"><div class="di">🎮</div><div class="dm">Right-click to add pages<br>or use the sidebar</div></div>
+    <div id="ctrls">
+      <button class="cc" onclick="zoom(.15)" title="Zoom In">＋</button>
+      <button class="cc" onclick="zoom(-.15)" title="Zoom Out">－</button>
+      <button class="cc" onclick="resetView()" title="Reset view">⌂</button>
+      <button class="cc fit" onclick="fitView()" title="Fit to view">⊠</button>
+      <button class="cc" onclick="toggleValPanel()" id="val-btn" title="Validate dialogue">✓</button>
+      <button class="cc" onclick="toggleSnapGrid()" id="snap-btn" title="Snap to grid">⊞</button>
+    </div>
+    <div id="mm" onclick="mmClick(event)" title="Click to navigate" style="cursor:crosshair"><canvas id="mmc"></canvas></div>
+    <div id="sel-rect"></div>
+    <div id="val-panel"></div>
+    <div id="fr-bar">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <span style="font-size:10px;font-weight:900;letter-spacing:1px;color:var(--accent);text-transform:uppercase">Find &amp; Replace</span>
+        <button onclick="closeFR()" style="background:none;border:none;color:var(--dim);cursor:pointer;font-size:14px">✕</button>
+      </div>
+      <div class="fg"><div class="fl">Find</div><input type="text" id="fr-find" placeholder="text to find..." oninput="frCount()"/></div>
+      <div class="fg"><div class="fl">Replace with</div><input type="text" id="fr-rep" placeholder="replacement..."/></div>
+      <div class="fr-btns">
+        <button onclick="doFR(false)">Replace All</button>
+        <button onclick="doFR(true)">This dialogue</button>
+      </div>
+      <div id="fr-count"></div>
+    </div>
+    <div id="kb-hint"></div>
+  </div>
+
+  <div id="ed" class="hidden">
+    <div id="ed-resize"></div>
+    <div id="ei"><div class="etit" id="etit">EDIT PAGE</div><div id="ec"></div></div>
+    <div id="ef">
+      <button id="sbtn" onclick="saveEdit()">Apply Changes</button>
+      <button class="delbtn" onclick="delNode()">🗑</button>
+    </div>
+  </div>
+
+<!-- PREVIEW PANEL -->
+<div id="prev-panel" class="hidden">
+  <div id="prev-inner">
+    <div id="prev-head">
+      <span class="prev-title">👁 DIALOGUE PREVIEW</span>
+      <div class="prev-controls">
+        <select id="prev-page-sel" onchange="prevJumpTo(this.value)"></select>
+        <button class="prev-ctrl" id="pbtn-replay" onclick="prevReplay()" title="Replay gibber">↺ Replay</button>
+        <button class="prev-ctrl" id="pbtn-skip" onclick="prevSkip()" title="Skip typing">⏩ Skip</button>
+      </div>
+    </div>
+    <div id="prev-crumb"></div>
+    <div id="prev-warn"></div>
+    <div id="prev-screen">
+      <div id="mc-dialogue"></div>
+    </div>
+  </div>
+</div>
+
+
+<!-- SKIN MODAL -->
+<div id="skin-modal" class="modal">
+  <div class="mbox" style="width:420px">
+    <div class="mh"><div class="mt">NPC PORTRAIT</div><button class="mx" onclick="closeModal('skin-modal')">✕</button></div>
+    <div class="mb">
+      <div class="fg"><div class="fl">Upload skin PNG</div>
+        <input type="file" id="skin-file" accept="image/png" onchange="uploadSkin(this)"/>
+        <div class="hint">Extracts the face region from the skin file locally (no upload)</div>
+      </div>
+      <div id="skin-preview" style="margin-top:10px;text-align:center;min-height:72px;display:flex;align-items:center;justify-content:center;gap:14px">
+        <div style="color:var(--dim);font-size:11px;font-style:italic">No portrait loaded</div>
+      </div>
+    </div>
+    <div class="mf">
+      <button class="tb" onclick="closeModal('skin-modal')">Cancel</button>
+      <button class="tb ok" onclick="applySkin()">Apply Portrait</button>
+    </div>
+  </div>
+</div>
+
+<!-- JSON MODAL -->
+<div id="json-modal" class="modal">
+  <div class="mbox">
+    <div class="mh"><div class="mt" id="jtit">EXPORT JSON</div><button class="mx" onclick="closeModal('json-modal')">✕</button></div>
+    <div class="mb"><pre id="jout"></pre></div>
+    <div class="mf"><button class="tb" onclick="copyJ()">📋 Copy</button><button class="tb ok" onclick="dlJ()">⬇ Download</button><button class="tb" onclick="dlMarkdown()">📝 Markdown</button></div>
+  </div>
+</div>
+
+<!-- IMPORT MODAL -->
+<div id="imp-modal" class="modal">
+  <div class="mbox">
+    <div class="mh"><div class="mt">IMPORT JSON</div><button class="mx" onclick="closeModal('imp-modal');clearImportError()">✕</button></div>
+    <div class="mb">
+      <div class="fg"><div class="fl">Dialogue Name</div><input type="text" id="iname" placeholder="my_dialogue"/></div>
+      <div class="fg">
+        <div class="fl" style="justify-content:space-between">
+          JSON
+          <button onclick="validateImportJSON()" style="background:none;border:1px solid var(--border);border-radius:3px;color:var(--dim);font-size:10px;font-weight:700;padding:2px 8px;cursor:pointer;transition:all .15s" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--dim)'">Validate</button>
+        </div>
+        <textarea id="ijson" style="min-height:260px;font-size:12px;font-family:monospace" placeholder="Paste dialogue JSON here..." oninput="clearImportError()"></textarea>
+      </div>
+      <div id="imp-error" style="display:none;margin-top:4px;border-radius:6px;overflow:hidden;border:1px solid rgba(255,107,107,.4)">
+        <div style="background:rgba(255,107,107,.12);padding:8px 12px;display:flex;align-items:flex-start;gap:10px">
+          <span style="color:var(--a2);font-size:15px;flex-shrink:0;margin-top:1px">⚠</span>
+          <div style="flex:1;min-width:0">
+            <div id="imp-error-msg" style="font-size:12px;font-weight:700;color:var(--a2);margin-bottom:4px"></div>
+            <div id="imp-error-loc" style="font-size:11px;color:var(--dim)"></div>
+          </div>
+        </div>
+        <div id="imp-error-ctx" style="background:rgba(0,0,0,.25);padding:8px 12px;font-family:monospace;font-size:11px;line-height:1.6;white-space:pre;overflow-x:auto;display:none"></div>
+      </div>
+    </div>
+    <div class="mf"><button class="tb ok" onclick="doImport()">Import</button></div>
+  </div>
+</div>
+
+<!-- CONTEXT MENU -->
+<div id="ctx">
+  <div class="clbl" id="ctit">Canvas</div>
+  <div class="csep"></div>
+  <div class="ci2" onclick="ctx_act('new-npc')"><span class="ico">🟦</span>New NPC Page</div>
+  <div class="ci2" onclick="ctx_act('new-player')"><span class="ico">🟩</span>New Player Page</div>
+  <div class="csep" id="cnsep" style="display:none"></div>
+  <div class="ci2" id="cedit" style="display:none" onclick="ctx_act('edit')"><span class="ico">✎</span>Edit Page</div>
+  <div class="ci2" id="cexpand" style="display:none" onclick="ctx_act('expand')"><span class="ico">⊞</span>Expand Node</div>
+  <div class="ci2" id="cdupe" style="display:none" onclick="ctx_act('dupe')"><span class="ico">⧉</span>Duplicate Page</div>
+  <div class="ci2 danger" id="cdel" style="display:none" onclick="ctx_act('delete')"><span class="ico">🗑</span>Delete Page</div>
+  <div class="csep"></div>
+  <div class="ci2" id="ctag" style="display:none" onclick="ctx_act('tag')"><span class="ico">🏷</span>Tag Node</div>
+  <div class="ci2" onclick="ctx_act('settings')"><span class="ico">⚙</span>Dialogue Settings</div>
+  <div class="ci2" onclick="ctx_act('layout')"><span class="ico">⬡</span>Auto Layout</div>
+</div>
+
+<!-- WIRE DRAG OVERLAY -->
+<svg id="wire-drag" style="position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:900;display:none">
+  <defs>
+    <marker id="wd-arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <polygon points="0 0, 6 3, 0 6" fill="rgba(255,255,255,.7)"/>
+    </marker>
+  </defs>
+  <path id="wire-drag-path" fill="none" stroke="rgba(255,255,255,.6)" stroke-width="2" stroke-dasharray="6 3" marker-end="url(#wd-arrow)"/>
+</svg>
+
+<!-- NODE TOOLTIP -->
+<div id="node-tip"><div class="ntip" id="node-tip-inner"></div></div>
+
+
+<div id="toast"></div>
+
+<script>
+// ── STATE ────────────────────────────────────────────────────────────────────
+let DL=[],AID=null,SEL=null,EDIT=null;
+let SC=1,TX=40,TY=40;
+let PAN=false,PX=0,PY=0,TX0=0,TY0=0,PMOV=false;
+let DRAG=false,DI=null;
+let INX=20,INY=20;
+let CTX_UID=null,CTX_X=0,CTX_Y=0;
+let SEQ=1; const uid=()=>'u'+(SEQ++);
+const EXPANDED_NODES = new Set(); // set of page._uid that are expanded
+
+let DB=['dialogue.professor_laurel','dialogue.starter_selected','dialogue.laurel_inform','dialogue.professor_conifer_archives_post_craft'];
+const MC=[
+  {c:'§0',bg:'#000',tx:'#fff'},{c:'§1',bg:'#00A',tx:'#fff'},{c:'§2',bg:'#0A0',tx:'#fff'},{c:'§3',bg:'#0AA',tx:'#fff'},
+  {c:'§4',bg:'#A00',tx:'#fff'},{c:'§5',bg:'#A0A',tx:'#fff'},{c:'§6',bg:'#FA0',tx:'#000',lbl:'Gold'},{c:'§7',bg:'#AAA',tx:'#000'},
+  {c:'§8',bg:'#555',tx:'#fff'},{c:'§9',bg:'#55F',tx:'#fff'},{c:'§a',bg:'#5F5',tx:'#000'},{c:'§b',bg:'#5FF',tx:'#000'},
+  {c:'§c',bg:'#F55',tx:'#fff'},{c:'§d',bg:'#F5F',tx:'#000'},{c:'§e',bg:'#FF5',tx:'#000'},{c:'§f',bg:'#EEE',tx:'#000'},
+  {c:'§l',bg:'#333',tx:'#fff',sym:'B'},{c:'§o',bg:'#333',tx:'#fff',sym:'I'},{c:'§r',bg:'#333',tx:'#fff',sym:'R'},
+];
+
+// ── BOOT ─────────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded',()=>{
+  renderDB();
+  newDialogue('Professor Laurel');
+  const S={"initializationAction":["q.player.data.dialogue.professor_laurel ? q.dialogue.set_page('goodbye');","q.player.data.dialogue.professor_conifer_archives_post_craft && q.player.data.dialogue.laurel_inform == false ? q.dialogue.set_page('warn_laurel');"],"speakers":{"npc":{"name":{"type":"expression","expression":"q.npc.name"},"face":"q.npc.face();","gibber":{"interval":0.1}},"player":{"face":"q.player.face();","gibber":{"interval":0.1},"name":{"type":"expression","expression":"q.player.username"}}},"pages":[{"id":"greeting","escapeAction":"0","speaker":"npc","lines":["I'm a little busy at the moment, can you… Oh! You must be a new trainer!"],"input":"q.dialogue.set_page('greeting2');"},{"id":"greeting2","escapeAction":"0","speaker":"npc","lines":["Well, I'm Professor Laurel! I'm one of two professors in Tempus, the other is my friend Professor Conifer."],"input":{"type":"option","vertical":true,"options":[{"text":"Nice to meet you!","value":"nice_to_meet_you","action":["q.dialogue.set_page('greeting3');"]}]}},{"id":"greeting3","escapeAction":"0","speaker":"npc","lines":["Let me just get a few things ready... Now before we start, what is your name?"],"input":{"type":"option","vertical":true,"options":[{"text":{"type":"expression","expression":"q.player.username"},"value":"playername","action":["q.dialogue.set_page('claim_pokedex');"]}]}},{"id":"claim_pokedex","escapeAction":"0","speaker":"npc","lines":["Great to meet you! Here is your Pokedex!"],"input":{"type":"option","vertical":true,"options":[{"text":"Obtain the Pokedex","value":"pokedex","action":["q.run_command('ftbquests change_progress ' + q.player.username + ' complete 0F1DFC22FEB78723');","q.dialogue.set_page('pokedex');"]}]}},{"id":"pokedex","escapeAction":"0","speaker":"npc","lines":["It's a very important tool for any trainer."],"input":{"type":"option","vertical":true,"options":[{"text":"Ok!","value":"okay","action":["q.dialogue.set_page('talk_to_elon');"]}]}},{"id":"talk_to_elon","escapeAction":"0","speaker":"npc","lines":["Now you're ready to start your journey. Go talk to Elon!"],"input":{"type":"option","vertical":true,"options":[{"text":"Thanks!","value":"okay","action":["q.dialogue.close();","q.player.data.dialogue.professor_laurel = true; q.player.save_data();"]}]}},{"id":"warn_laurel","escapeAction":"0","speaker":"player","lines":["Professor Conifer and I found something in the archives!"],"input":["q.dialogue.set_page('inform_laurel');"]},{"id":"inform_laurel","escapeAction":"0","speaker":"player","lines":["§o§7**You tell Professor Laurel about the archives**§r"],"input":{"type":"option","vertical":true,"options":[{"text":"So did you get all that?","value":"did","action":["q.dialogue.set_page('laurel_shocked');"]}]}},{"id":"laurel_shocked","escapeAction":"0","speaker":"npc","lines":["Oh my! This is very concerning!"],"input":["q.player.data.dialogue.laurel_inform = true; q.player.save_data();","q.run_command('ftbquests change_progress ' + q.player.username + ' complete 707492869CC4B785');","q.dialogue.set_page('laurel_shocked_2');"]},{"id":"laurel_shocked_2","escapeAction":"0","speaker":"npc","lines":["Take these items and go back to Professor Conifer."],"input":{"type":"option","vertical":true,"options":[{"text":"Thank you!","value":"goodbye","action":["q.dialogue.close();"]}]}},{"id":"goodbye","speaker":"npc","lines":["..."],"input":"q.dialogue.close();"}]};
+  importInto(AID,S);
+  setupCanvas();
+  setupEditorResize();
+  autoLayout();
+  renderCanvas();
+  setInterval(updateMM, 600);
+  // Try restore autosave (after initial data is loaded)
+  setTimeout(() => {
+    if (!_tryRestoreAutosave()) _snapshot(); // take initial snapshot
+    renderFlagSim();
+  }, 100);
+});
+
+// ── DIALOGUES ────────────────────────────────────────────────────────────────
+function mkSettings(){ return {initActions:[],escapeAction:'',speakers:{npc:{nameExpr:'q.npc.name',face:'q.npc.face();',gi:0.1,gs:4},player:{nameExpr:'q.player.username',face:'q.player.face();',gi:0.1,gs:4}}}; }
+function newDialogue(name){
+  const id=uid();
+  DL.push({id,name:name||'Dialogue '+(DL.length+1),pages:[],settings:mkSettings()});
+  AID=id; renderTabs(); return id;
+}
+function switchD(id){AID=id;SEL=null;EDIT=null;EXPANDED_NODES.clear();BULK_SEL.clear();PREV_CRUMB=[];closeEd();renderTabs();renderCanvas();}
+function removeD(id,e){e.stopPropagation();if(DL.length===1){toast('Cannot remove last');return;}DL=DL.filter(d=>d.id!==id);if(AID===id)AID=DL[0].id;renderTabs();renderCanvas();}
+const gD=()=>DL.find(d=>d.id===AID);
+const gP=u=>{const d=gD();return d?d.pages.find(p=>p._uid===u):null;};
+function renderTabs(){
+  const el=document.getElementById('dtabs');if(!el)return;el.innerHTML='';
+  DL.forEach(d=>{const t=document.createElement('div');t.className='dtab'+(d.id===AID?' active':'');t.innerHTML=`<span ondblclick="renD('${d.id}',this)">${d.name}</span><span class="xt" onclick="removeD('${d.id}',event)">✕</span>`;t.addEventListener('click',()=>switchD(d.id));el.appendChild(t);});
+}
+function renD(id,el){const d=DL.find(x=>x.id===id),old=d.name;el.contentEditable=true;el.focus();el.onblur=()=>{el.contentEditable=false;d.name=el.textContent.trim()||old;renderTabs();};el.onkeydown=e=>{if(e.key==='Enter')el.blur();};}
+
+// ── PAGES ─────────────────────────────────────────────────────────────────────
+function addPage(spk,x,y){
+  const d=gD();if(!d)return;
+  const p={_uid:uid(),id:'page_'+(d.pages.length+1),speaker:spk,lines:[''],input:{type:'none'},escapeAction:'',gibber:null,textColor:'',background:'',x:x??260+Math.random()*180,y:y??60+Math.random()*160};
+  d.pages.push(p);renderCanvas();openEd(p._uid);
+}
+function delPage(u){const d=gD();if(!d)return;d.pages=d.pages.filter(p=>p._uid!==u);if(EDIT===u)closeEd();renderCanvas();}
+
+// ── LINKS ─────────────────────────────────────────────────────────────────────
+function links(page){
+  const ls=[];const inp=page.input;
+  const sp=s=>{if(typeof s!=='string')return null;const m=s.match(/q\.dialogue\.set_page\('([^']+)'\)/);return m?m[1]:null;};
+  const isc=s=>typeof s==='string'&&s.includes('q.dialogue.close()');
+  const proc=(a,lbl,typ)=>{const t=sp(a);if(t)ls.push({lbl,target:t,typ});if(isc(a))ls.push({lbl:'✕',target:null,typ:'close'});};
+  if(!inp)return ls;
+  if(typeof inp==='string'){const t=sp(inp);if(t)proc(inp,'→'+t,'normal');}
+  else if(Array.isArray(inp)){inp.forEach(s=>{const t=sp(s);if(t)proc(s,'→'+t,'normal');});}
+  else if(inp.type==='option'){(inp.options||[]).forEach(o=>{const acts=Array.isArray(o.action)?o.action:[o.action];const lbl=(typeof o.text==='string'?o.text:(o.text?.expression||o.value||'')).replace(/§[0-9a-fk-or]/gi,'').substring(0,16);acts.forEach(a=>proc(a,lbl,'normal'));});}
+  else if(inp.type==='auto-continue'&&inp.action){const a=typeof inp.action==='string'?inp.action:inp.action[0];proc(a,'auto','normal');}
+  if(page.escapeAction){const ea=typeof page.escapeAction==='string'?page.escapeAction:page.escapeAction[0];const t=sp(ea);if(t)ls.push({lbl:'esc',target:t,typ:'escape'});}
+  return ls;
+}
+
+// ── LINK SLOTS ───────────────────────────────────────────────────────────────
+// Returns one slot object per wireable set_page location in the page's data.
+// Slots exist even when their target is null (unplugged), so port dots persist.
+// Each slot: { key, label, target|null }
+// key is a stable identifier used to find the slot during rewire.
+function linkSlots(page) {
+  const slots = [];
+  const inp = page.input;
+
+  // null/undefined → no input at all, no slots
+  if (inp === null || inp === undefined) return slots;
+
+  const sp = s => {
+    if (typeof s !== 'string') return null;
+    const m = s.match(/q\.dialogue\.set_page\('([^']+)'\)/);
+    return m ? m[1] : null;
+  };
+  const firstTarget = a => {
+    const arr = Array.isArray(a) ? a : (a ? [a] : []);
+    for (const s of arr) { const t = sp(s); if (t) return t; }
+    return null;
+  };
+
+  // String (including '') or array — one persistent slot
+  if (typeof inp === 'string' || Array.isArray(inp)) {
+    const arr = Array.isArray(inp) ? inp : (inp ? [inp] : []);
+    slots.push({ key: 'simple:0', label: '→', target: firstTarget(arr) });
+  } else if (inp.type === 'option') {
+    (inp.options || []).forEach((o, i) => {
+      const lbl = (typeof o.text === 'string' ? o.text : (o.text?.expression || o.value || `opt ${i+1}`))
+        .replace(/§[0-9a-fk-or]/gi, '').substring(0, 18);
+      slots.push({ key: `opt:${i}`, label: lbl, target: firstTarget(o.action) });
+    });
+  } else if (inp.type === 'auto-continue') {
+    slots.push({ key: 'ac:0', label: 'auto', target: firstTarget(inp.action) });
+  }
+  // none / text input — no wire slots
+
+  return slots;
+}
+
+// Rewire one specific slot: find the slot by key, update its set_page reference.
+function rewireSlot(page, slotKey, newTargetId) {
+  const inp = page.input;
+  if (!inp) return;
+
+  const sp = s => {
+    if (typeof s !== 'string') return null;
+    const m = s.match(/q\.dialogue\.set_page\('([^']+)'\)/);
+    return m ? m[1] : null;
+  };
+
+  // Rewrite or strip set_page in a single string; if oldId null, do nothing (caller inserts)
+  const rw = (s, oldId, newId) => {
+    if (typeof s !== 'string') return s;
+    if (!oldId) return s;
+    const esc = oldId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    if (!newId) return s.replace(new RegExp(`q\\.dialogue\\.set_page\\('${esc}'\\)\\s*;?`, 'g'), '').trim();
+    return s.replace(new RegExp(`q\\.dialogue\\.set_page\\('${esc}'\\)`, 'g'), `q.dialogue.set_page('${newId}')`);
+  };
+
+  if (slotKey === 'simple:0') {
+    if (typeof inp === 'string') {
+      const old = sp(inp);
+      if (newTargetId && !old) {
+        // Empty slot — insert new set_page call
+        const base = inp.trim();
+        page.input = base ? `${base}\nq.dialogue.set_page('${newTargetId}');` : `q.dialogue.set_page('${newTargetId}');`;
+      } else {
+        const result = rw(inp, old, newTargetId);
+        // After unplug: keep as array so slot survives (empty string is falsy)
+        page.input = newTargetId ? result : (result.trim() ? result.trim().split('\n').filter(s=>s.trim()) : []);
+      }
+    } else if (Array.isArray(inp)) {
+      const old = inp.map(sp).find(Boolean) || null;
+      if (newTargetId && !old) {
+        page.input = [...inp, `q.dialogue.set_page('${newTargetId}');`];
+      } else {
+        const u = inp.map(s => rw(s, old, newTargetId)).filter(s => typeof s !== 'string' || s.trim());
+        // Always keep as array so slot persists even when empty
+        page.input = u.length === 1 ? u[0] : u;
+      }
+    }
+
+  } else if (slotKey.startsWith('opt:')) {
+    const i = parseInt(slotKey.split(':')[1], 10);
+    const opt = inp.options?.[i]; if (!opt) return;
+    const acts = Array.isArray(opt.action) ? [...opt.action] : (opt.action ? [String(opt.action)] : []);
+    const old = acts.map(sp).find(Boolean) || null;
+    let updated;
+    if (newTargetId && !old) {
+      updated = [...acts, `q.dialogue.set_page('${newTargetId}');`];
+    } else {
+      updated = acts.map(s => rw(s, old, newTargetId)).filter(s => typeof s !== 'string' || s.trim());
+    }
+    opt.action = updated.length === 1 ? updated[0] : (updated.length === 0 ? [] : updated);
+
+  } else if (slotKey === 'ac:0') {
+    const raw = inp.action;
+    const acts = Array.isArray(raw) ? [...raw] : (typeof raw === 'string' && raw ? [raw] : []);
+    const old = acts.map(sp).find(Boolean) || null;
+    let updated;
+    if (newTargetId && !old) {
+      updated = [...acts, `q.dialogue.set_page('${newTargetId}');`];
+    } else {
+      updated = acts.map(s => rw(s, old, newTargetId)).filter(s => typeof s !== 'string' || s.trim());
+    }
+    inp.action = updated.length === 1 ? updated[0] : (updated.length === 0 ? '' : updated);
+  }
+}
+
+// Single-string rewrite helper (old→new, null new = strip)
+function _rewirePageLink_action(s, oldId, newId) {
+  if (typeof s !== 'string') return s;
+  if (!oldId) return s;
+  const esc = oldId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  if (!newId) return s.replace(new RegExp(`q\\.dialogue\\.set_page\\('${esc}'\\)\\s*;?`, 'g'), '').trim();
+  return s.replace(new RegExp(`q\\.dialogue\\.set_page\\('${esc}'\\)`, 'g'), `q.dialogue.set_page('${newId}')`);
+}
+
+function _rewriteSetPage(str, oldId, newId) {
+  if (typeof str !== 'string') return str;
+  if (newId === null) {
+    // Remove the set_page call (and trailing semicolon+space)
+    return str.replace(new RegExp(`q\\.dialogue\\.set_page\\('${oldId.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')}'\\);?\\s*`,'g'), '').trim();
+  }
+  return str.replace(
+    new RegExp(`q\\.dialogue\\.set_page\\('${oldId.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')}'\\)`,'g'),
+    `q.dialogue.set_page('${newId}')`
+  );
+}
+
+// Find the first set_page target in an action array/string
+function _getSetPageTarget(inp) {
+  const check = s => {
+    if (typeof s !== 'string') return null;
+    const m = s.match(/q\.dialogue\.set_page\('([^']+)'\)/);
+    return m ? m[1] : null;
+  };
+  if (typeof inp === 'string') return check(inp);
+  if (Array.isArray(inp)) { for (const s of inp) { const t = check(s); if (t) return t; } }
+  return null;
+}
+
+// ── NODE TOOLTIP ─────────────────────────────────────────────────────────────
+let _tipTimer = null;
+
+function buildTooltipHTML(page) {
+  const d = gD();
+  const esc = (s) => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+  // Speaker badge
+  const spkCls = page.speaker === 'npc' ? 'npc' : page.speaker === 'player' ? 'player' : 'none';
+  const spkLabel = page.speaker || 'none';
+
+  // Lines — show up to 3
+  const rawLines = (page.lines || []).slice(0, 3);
+  const linesHTML = rawLines.map(l => {
+    const isE = typeof l === 'object' && l.type === 'expression';
+    const txt = (isE ? (l.expression || '') : (typeof l === 'string' ? l : ''))
+      .replace(/§[0-9a-fk-or]/gi, '').substring(0, 60);
+    return `<div class="ntip-line${isE?' expr':''}">${isE?'⚡ ':''}"${esc(txt)}"</div>`;
+  }).join('');
+  const moreLines = (page.lines||[]).length - 3;
+
+  // Input type tag
+  const inp = page.input;
+  const inpType = inp?.type || (typeof inp === 'string' || Array.isArray(inp) ? 'simple' : 'none');
+  const inpLabel = { none:'no input', option:'options', 'auto-continue':'auto-continue', text:'text input', simple:'action' }[inpType] || inpType;
+
+  // Options
+  const opts = inp?.options || [];
+  const optsHTML = opts.slice(0, 4).map(o => {
+    const lbl = (typeof o.text === 'string' ? o.text : (o.text?.expression || o.value || '—'))
+      .replace(/§[0-9a-fk-or]/gi,'').substring(0, 24);
+    const acts = Array.isArray(o.action) ? o.action : [o.action];
+    const target = acts.map(a => {
+      if (typeof a !== 'string') return '';
+      const m = a.match(/q\.dialogue\.set_page\('([^']+)'\)/);
+      return m ? m[1] : (a.includes('close()') ? '[close]' : '');
+    }).filter(Boolean)[0] || '';
+    return `<div class="ntip-opt"><span class="arrow">▸</span><span class="lbl">${esc(lbl)}</span>${target?`<span class="tgt">→ ${esc(target)}</span>`:''}</div>`;
+  }).join('');
+  const moreOpts = opts.length - 4;
+
+  // Meta tags
+  const tags = [`<span class="ntip-tag inp">${esc(inpLabel)}</span>`];
+  if (opts.length) tags.push(`<span class="ntip-tag opts">${opts.length} option${opts.length!==1?'s':''}</span>`);
+  if (page.escapeAction && page.escapeAction !== '0' && page.escapeAction !== undefined) tags.push(`<span class="ntip-tag esc">escape action</span>`);
+  if (page.gibber) tags.push(`<span class="ntip-tag mc">gibber override</span>`);
+  // Check for data flag writes
+  const allText = JSON.stringify(page.input || '');
+  if (allText.includes('q.player.data') && allText.includes('= true')) tags.push(`<span class="ntip-tag cond">sets flags</span>`);
+  if (allText.includes('q.run_command')) tags.push(`<span class="ntip-tag cond">runs command</span>`);
+  // Check init routing target
+  if (d) {
+    const isInitTarget = d.settings.initActions.some(a => a.includes(`set_page('${page.id}')`));
+    if (isInitTarget) tags.push(`<span class="ntip-tag cond">init target</span>`);
+  }
+  // Check if this is an entry point (no incoming links)
+  if (d) {
+    const hasIncoming = d.pages.some(p => p.id !== page.id && links(p).some(l => l.target === page.id));
+    if (!hasIncoming) tags.push(`<span class="ntip-tag mc">entry point</span>`);
+  }
+
+  return `
+    <div class="ntip-head">
+      <span class="ntip-id">${esc(page.id)}</span>
+      <span class="ntip-spk ${spkCls}">${spkLabel}</span>
+    </div>
+    ${linesHTML ? `<div class="ntip-lines">${linesHTML}${moreLines>0?`<div class="ntip-line" style="opacity:.5">…${moreLines} more</div>`:''}</div>` : ''}
+    <div class="ntip-meta">${tags.join('')}</div>
+    ${optsHTML ? `<div class="ntip-opts">${optsHTML}${moreOpts>0?`<div class="ntip-opt"><span style="opacity:.5">…${moreOpts} more</span></div>`:''}</div>` : ''}
+  `;
+}
+
+function showNodeTip(page, mouseX, mouseY) {
+  const tip = document.getElementById('node-tip');
+  const inner = document.getElementById('node-tip-inner');
+  if (!tip || !inner) return;
+  inner.innerHTML = buildTooltipHTML(page);
+  tip.classList.add('show');
+  _positionTip(tip, mouseX, mouseY);
+}
+
+function hideNodeTip() {
+  clearTimeout(_tipTimer);
+  const tip = document.getElementById('node-tip');
+  if (tip) tip.classList.remove('show');
+}
+
+function _positionTip(tip, mx, my) {
+  const W = tip.offsetWidth || 300, H = tip.offsetHeight || 200;
+  const vw = window.innerWidth, vh = window.innerHeight;
+  let x = mx + 14, y = my + 14;
+  if (x + W > vw - 10) x = mx - W - 10;
+  if (y + H > vh - 10) y = my - H - 10;
+  tip.style.left = Math.max(6, x) + 'px';
+  tip.style.top  = Math.max(6, y) + 'px';
+}
+
+function _attachTipEvents(node, page) {
+  node.addEventListener('mouseenter', e => {
+    clearTimeout(_tipTimer);
+    _tipTimer = setTimeout(() => showNodeTip(page, e.clientX, e.clientY), 280);
+  });
+  node.addEventListener('mousemove', e => {
+    const tip = document.getElementById('node-tip');
+    if (tip && tip.classList.contains('show')) _positionTip(tip, e.clientX, e.clientY);
+  });
+  node.addEventListener('mouseleave', () => {
+    clearTimeout(_tipTimer);
+    hideNodeTip();
+  });
+  // Hide on click/drag start
+  node.addEventListener('mousedown', hideNodeTip);
+}
+
+// ── EXPANDED NODE RENDERER ───────────────────────────────
+function renderExpandedNode(page) {
+  const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;');
+  const badge = page.speaker==='npc'
+    ? '<span class="nbdg bnpc">NPC</span>'
+    : page.speaker==='player'
+      ? '<span class="nbdg bpl">PLAYER</span>'
+      : '';
+
+  // ── Lines ──
+  const rawLines = page.lines || [];
+  const linesHTML = rawLines.length ? `
+    <div class="exp-lines">${rawLines.map(l=>{
+      const isE = typeof l==='object'&&l.type==='expression';
+      const txt = (isE ? (l.expression||'') : (typeof l==='string'?l:'')).replace(/§[0-9a-fk-or]/gi,'');
+      return `<div class="exp-line${isE?' expr':''}">${isE?'<em>⚡ expr</em> ':'"'}${esc(txt.substring(0,80))}${isE?'':'"'}</div>`;
+    }).join('')}</div>` : '';
+
+  // ── Input section ──
+  const inp = page.input;
+  const inpType = inp?.type || (typeof inp==='string'||Array.isArray(inp)?'simple':'none');
+  let inputSection = '';
+
+  if (inpType === 'option') {
+    const opts = inp.options || [];
+    const isHoriz = inp.vertical === false;
+    inputSection = `<div class="exp-input-lbl">${isHoriz?'Horizontal':'Vertical'} options (${opts.length})</div>
+    <div class="exp-opts">${opts.map(o=>{
+      const lbl = (typeof o.text==='string'?o.text:(o.text?.expression||o.value||'—')).replace(/§[0-9a-fk-or]/gi,'').substring(0,28);
+      const acts = Array.isArray(o.action)?o.action:[o.action||''];
+      const target = acts.map(a=>{
+        if(typeof a!=='string')return '';
+        const m=a.match(/q\.dialogue\.set_page\('([^']+)'\)/);
+        return m?m[1]:(a.includes('close()')?'[close]':'');
+      }).filter(Boolean)[0]||'';
+      const isClose = acts.some(a=>typeof a==='string'&&a.includes('close()'));
+      const vis = o.isVisible ? `<span style="font-size:9px;color:var(--dim);font-style:italic;margin-left:3px" title="${esc(o.isVisible)}">⚙</span>` : '';
+      return `<div class="exp-opt">
+        <span class="oa">▸</span>
+        <span class="ol">${esc(lbl)}${vis}</span>
+        ${target&&!isClose?`<span class="ot">→ ${esc(target)}</span>`:''}
+        ${isClose?`<span class="oc">✕ close</span>`:''}
+      </div>`;
+    }).join('')}</div>`;
+  } else if (inpType === 'auto-continue') {
+    const delay = inp?.delay ?? 5;
+    const target = inp?.action ? (()=>{ const m=String(inp.action).match(/set_page\('([^']+)'\)/); return m?m[1]:''; })() : '';
+    inputSection = `<div class="exp-ac">
+      <div class="exp-ac-bar" style="width:100%"></div>
+      <div class="exp-ac-lbl">Auto-continue after ${delay}s${target?` → ${esc(target)}`:''}</div>
+    </div>`;
+  } else if (inpType === 'text') {
+    inputSection = `<div class="exp-input-lbl">Text input field</div>`;
+  } else if (inpType === 'simple') {
+    const raw = typeof inp==='string'?inp:(Array.isArray(inp)?inp.join('; '):'');
+    inputSection = `<div class="exp-input-lbl">Action: <span style="font-family:monospace;font-size:10px;color:var(--a3)">${esc(raw.substring(0,50))}</span></div>`;
+  }
+
+  // ── Meta tags ──
+  const tags = [];
+  if (page.escapeAction && page.escapeAction !== '0') tags.push(`<span class="exp-tag esc">escape: ${esc(String(page.escapeAction).substring(0,20))}</span>`);
+  if (page.gibber) tags.push(`<span class="exp-tag gb">gibber ${page.gibber.interval ?? ''}s</span>`);
+  const allText = JSON.stringify(page.input||'');
+  if (allText.includes('q.run_command')) tags.push(`<span class="exp-tag cmd">runs command</span>`);
+  if (allText.includes('q.player.data')&&allText.includes('= true')) tags.push(`<span class="exp-tag flag">sets flags</span>`);
+  const metaHTML = tags.length ? `<div class="exp-meta">${tags.join('')}</div>` : '';
+
+  return `<div class="nh" style="padding-right:32px"><div class="nid">${esc(page.id)}</div>${badge}</div>
+${linesHTML}${inputSection}${metaHTML}
+<button class="nedit" onclick="openEd('${page._uid}');event.stopPropagation()">✎</button>`;
+}
+
+// ── RENDER ────────────────────────────────────────────────────────────────────
+function renderCanvas(){
+  const cv=document.getElementById('cv');if(!cv)return;
+  const d=gD();const dh=document.getElementById('dh');
+  const valid=new Set(d?d.pages.map(p=>p._uid):[]);
+  cv.querySelectorAll('.node').forEach(n=>{if(n.dataset.uid==='__init__'){if(!d)n.remove();}else if(!valid.has(n.dataset.uid))n.remove();});
+  if(!d||d.pages.length===0){if(dh)dh.style.display='';renderConn();updateMM();return;}
+  if(dh)dh.style.display='none';
+  d.pages.forEach(p=>{
+    let n=cv.querySelector(`.node[data-uid="${p._uid}"]`);
+    if(!n){n=document.createElement('div');n.dataset.uid=p._uid;cv.appendChild(n);mkDrag(n,p);_attachTipEvents(n,p);}
+    const isExp=EXPANDED_NODES.has(p._uid);
+    n.className='node type-'+p.speaker+(SEL===p._uid?' selected':'')+(isExp?' expanded':'')+(p._tag?' '+( {done:'tag-done',review:'tag-review',branch:'tag-branch'}[p._tag]||''):'');
+    n.style.cssText=`left:${p.x}px;top:${p.y}px`;
+
+    const spkClass=p.speaker==='npc'?'npc':p.speaker==='player'?'player':'none';
+
+    // One port per link slot — slots persist even when their target is null (unplugged)
+    const slots = linkSlots(p);
+    const portsHTML = slots.length
+      ? `<div class="node-ports">${slots.map(sl => {
+          const connected = sl.target ? 'connected' : 'disconnected';
+          const title = sl.target ? `${sl.label} → ${sl.target}` : `${sl.label} (unlinked — drag to connect)`;
+          return `<div class="port ${spkClass} ${connected}" title="${title}" onmousedown="startWire(event,'${p._uid}','${sl.key}','${sl.target||''}')"></div>`;
+        }).join('')}</div>`
+      : '';
+
+    // Input socket — the window mouseup handler detects drop via elementFromPoint
+    const socketHTML=`<div class="socket ${spkClass}" title="Drop a link here"></div>`;
+
+    if(isExp){
+      n.innerHTML=renderExpandedNode(p)+portsHTML+socketHTML;
+    } else {
+      const raw=p.lines[0]||'';const txt=(typeof raw==='string'?raw:(raw.expression||'')).replace(/§[0-9a-fk-or]/gi,'').substring(0,52);
+      const badge=p.speaker==='npc'?'<span class="nbdg bnpc">NPC</span>':'<span class="nbdg bpl">PLAYER</span>';
+      const chips=slots.slice(0,3).map(sl=>`<div class="chip g">${(sl.label||sl.target||'').substring(0,20)}</div>`).join('');
+      n.innerHTML=`<div class="nh"><div class="nid">${p.id}</div>${badge}</div>
+<div class="nb"><div class="np">${txt||'<em style="opacity:.5">No lines</em>'}</div><div style="font-size:10px;opacity:.55;margin-top:2px">${p.input?.type||'none'} input</div></div>
+${slots.length?`<div class="nf">${chips}${slots.length>3?`<div class="chip">+${slots.length-3}</div>`:''}</div>`:''}
+${portsHTML}${socketHTML}
+<button class="nedit" onclick="openEd('${p._uid}');event.stopPropagation()">✎</button>`;
+    }
+    n.addEventListener('click',e=>{if(e.target.classList.contains('nedit'))return;SEL=p._uid;renderCanvas();});
+  });
+  // ── Init block ──────────────────────────────────────────
+  let ini=cv.querySelector('.node.type-init');
+  if(!ini){ini=document.createElement('div');ini.className='node type-init';ini.dataset.uid='__init__';cv.appendChild(ini);mkDragIni(ini);}
+  ini.style.cssText=`left:${INX}px;top:${INY}px`;
+  const s=d.settings;
+
+  // Palette for action rows (matches editor cards)
+  const INI_COLS=['#5b8cff','#52e3a0','#ffd166','#ff6b6b','#c45bff','#38bdf8','#fb923c','#e879f9'];
+
+  const actionRowsHTML = s.initActions.length === 0
+    ? `<div class="ini-empty">No init actions yet — click ✎ to add</div>`
+    : `<div class="ini-actions">${s.initActions.map((a,i)=>{
+        const col = INI_COLS[i % INI_COLS.length];
+        const p = _parseInitAction(a);
+        let body = '';
+        if (p.type === 'cond') {
+          body = `<div class="ini-row-cond">if ${_renderCondition(p.cond)}</div>
+                  <div class="ini-row-target"><span class="arr">▶</span><span class="pg">${p.target}</span><span class="ini-row-type ini-type-cond">conditional</span></div>`;
+        } else if (p.type === 'always') {
+          body = `<div class="ini-row-target"><span class="arr">▶</span><span class="pg">${p.target}</span><span class="ini-row-type ini-type-always">always</span></div>`;
+        } else {
+          body = `<div class="ini-row-raw">${a.replace(/</g,'&lt;').substring(0,60)}</div><span class="ini-row-type ini-type-raw" style="margin-top:3px;display:inline-block">raw molang</span>`;
+        }
+        return `<div class="ini-row">
+          <div class="ini-row-num" style="background:${col}">${i+1}</div>
+          <div class="ini-row-body">${body}</div>
+        </div>`;
+      }).join('')}</div>`;
+
+  const escTxt = s.escapeAction ? `<span style="font-family:monospace;color:var(--dim);font-size:10px">${s.escapeAction.substring(0,36).replace(/</g,'&lt;')}</span>` : '<span style="color:var(--dim);font-size:10px;font-style:italic">none</span>';
+
+  ini.innerHTML=`
+    <div class="nh" style="padding-right:32px">
+      <div class="nid">${d.name}</div>
+      <span class="nbdg bini">ENTRY</span>
+    </div>
+    <div class="ini-meta">
+      <div class="ini-meta-item">NPC gibber <b>${s.speakers.npc.gi}s / step ${s.speakers.npc.gs}</b></div>
+      <div class="ini-meta-item">Player gibber <b>${s.speakers.player.gi}s / step ${s.speakers.player.gs}</b></div>
+      <div class="ini-meta-item">Escape <b style="font-family:monospace;font-size:10px">${s.escapeAction ? s.escapeAction.substring(0,22).replace(/</g,'&lt;')+'…' : 'none'}</b></div>
+    </div>
+    ${actionRowsHTML}
+    <button class="ini-add-btn" onclick="addIA();event.stopPropagation()">+ Add Init Action</button>
+    <button class="nedit" onclick="editSettings();event.stopPropagation()">✎</button>`;
+
+  renderConn();updateMM();
+}
+
+// Width constants — IW tracks actual init block width
+const NW=220,IW=380;
+const estimH=p=>{
+  if(EXPANDED_NODES.has(p._uid)){
+    const lineCount=(p.lines||[]).length;
+    const optCount=p.input?.options?.length||0;
+    const hasAC=p.input?.type==='auto-continue';
+    const hasMeta=(p.escapeAction&&p.escapeAction!=='0')||p.gibber;
+    return Math.max(120,
+      38                           // header
+      + lineCount * 22 + (lineCount?10:0)  // lines section
+      + (optCount ? 28 + optCount*26 : 0)  // options
+      + (hasAC ? 38 : 0)
+      + (hasMeta ? 28 : 0)
+    );
+  }
+  return Math.max(85,55+(p.lines||[]).length*16+(p.input?.options?.length||0)*18);
+};
+const estimIniH=s=>Math.max(80, 80 + s.initActions.length * 46);
+
+function renderConn(){
+  const svg=document.getElementById('svg');if(!svg)return;
+  while(svg.firstChild)svg.removeChild(svg.firstChild);
+  const d=gD();if(!d)return;
+  const byId={};d.pages.forEach(p=>byId[p.id]=p);
+
+  const defs=document.createElementNS('http://www.w3.org/2000/svg','defs');
+  // Markers: init(purple), close(red), escape(gold), npc→npc(blue), npc→player(violet), player→npc(green), player→player(teal)
+  [['ma-nn','#5b8cff'],['ma-np','#a78bfa'],['ma-pn','#34d399'],['ma-pp','#52e3a0'],
+   ['mc','#ff6b6b'],['mi','#c45bff'],['me','#ffd166']].forEach(([id,col])=>{
+    const mk=document.createElementNS('http://www.w3.org/2000/svg','marker');
+    mk.setAttribute('id',id);mk.setAttribute('markerWidth','8');mk.setAttribute('markerHeight','8');mk.setAttribute('refX','6');mk.setAttribute('refY','3');mk.setAttribute('orient','auto');
+    const pg=document.createElementNS('http://www.w3.org/2000/svg','polygon');pg.setAttribute('points','0 0, 6 3, 0 6');pg.setAttribute('fill',col);mk.appendChild(pg);defs.appendChild(mk);
+  });svg.appendChild(defs);
+
+  const curve=(x1,y1,x2,y2,cls,mk,interactive)=>{
+    const dx=Math.max(Math.abs(x2-x1)*.5,50);
+    const path=document.createElementNS('http://www.w3.org/2000/svg','path');
+    path.setAttribute('d',`M${x1},${y1} C${x1+dx},${y1} ${x2-dx},${y2} ${x2},${y2}`);
+    path.setAttribute('class','cl '+cls);
+    path.setAttribute('marker-end',`url(#${mk})`);
+    if(!interactive)path.style.pointerEvents='none';
+    svg.appendChild(path);
+  };
+
+  const IH=estimIniH(d.settings);
+  const INI_ROW_TOP=80,INI_ROW_H=46;
+  d.settings.initActions.forEach((a,i)=>{
+    const m=a.match(/q\.dialogue\.set_page\('([^']+)'\)/);
+    if(m&&byId[m[1]]){
+      const tp=byId[m[1]],th=estimH(tp);
+      const rowCY=INY+INI_ROW_TOP+i*INI_ROW_H+INI_ROW_H/2;
+      curve(INX+IW,rowCY,tp.x,tp.y+th/2,'ci','mi',false);
+    }
+  });
+
+  d.pages.forEach(p=>{
+    const sh=estimH(p);
+    const pw=EXPANDED_NODES.has(p._uid)?340:NW;
+    const sx=p.x+pw,sy=p.y+sh/2;
+    links(p).forEach(l=>{
+      if(!l.target||!byId[l.target])return;
+      const tp=byId[l.target],th=estimH(tp);
+      // Pick colour/marker based on speaker transition
+      let cls,mk;
+      if(l.typ==='escape'){cls='ce';mk='me';}
+      else if(l.typ==='close'){cls='cc2';mk='mc';}
+      else{
+        const spk=p.speaker||'none';
+        const tspk=tp.speaker||'none';
+        const key=`${spk==='npc'?'n':'p'}${tspk==='npc'?'n':'p'}`;
+        const map={nn:'cn-npc-npc ma-nn',np:'cn-npc-pl ma-np',pn:'cn-pl-npc ma-pn',pp:'cn-pl-pl ma-pp'};
+        const parts=(map[key]||map.nn).split(' ');
+        cls=parts[0];mk=parts[1];
+      }
+      curve(sx,sy,tp.x,tp.y+th/2,cls,mk,true);
+    });
+  });
+}
+
+// ── CANVAS INPUT ──────────────────────────────────────────────────────────────
+function setupCanvas(){
+  const cw=document.getElementById('cw');
+  cw.addEventListener('mousedown',e=>{
+    if(e.button!==0)return;closeCtx();
+    const t=e.target;const bg=t===cw||t.id==='cv'||t.id==='svg'||t.tagName==='path'||t.tagName==='svg';
+    if(bg){
+      if(e.shiftKey){ _startBulkSel(e); }
+      else { BULK_SEL.clear(); _applyBulkSelClasses(); PAN=true;PMOV=false;PX=e.clientX;PY=e.clientY;TX0=TX;TY0=TY;cw.style.cursor='grabbing';hideNodeTip(); }
+    }
+  });
+  window.addEventListener('mousemove',e=>{
+    if(BSEL_DRAG){_updateBulkSel(e);return;}
+    if(BULK_MOVE){_moveBulk(e);return;}
+    if(PAN){const dx=e.clientX-PX,dy=e.clientY-PY;if(Math.abs(dx)>3||Math.abs(dy)>3)PMOV=true;TX=TX0+dx;TY=TY0+dy;applyT();}
+    if(DRAG&&DI){
+      const dx=(e.clientX-DI.mx)/SC, dy=(e.clientY-DI.my)/SC;
+      if(DI.page){
+        // Regular page nodes — clamp to positive canvas space
+        const nx=_snapVal(Math.max(0,DI.sx+dx)), ny=_snapVal(Math.max(0,DI.sy+dy));
+        DI.page.x=nx; DI.page.y=ny;
+        DI.el.style.left=nx+'px'; DI.el.style.top=ny+'px';
+      } else {
+        // Init block — no clamping, can go anywhere including negative coords
+        INX=DI.sx+dx; INY=DI.sy+dy;
+        DI.el.style.left=INX+'px'; DI.el.style.top=INY+'px';
+      }
+      renderConn(); updateMM();
+    }
+  });
+  window.addEventListener('mouseup',e=>{
+    const wasP=PAN;PAN=false;DRAG=false;DI=null;cw.style.cursor='default';
+    if(BSEL_DRAG){_endBulkSel();return;}
+    if(BULK_MOVE){BULK_MOVE=null;_snapshot();renderCanvas();return;}
+    if(e.button===0&&wasP&&!PMOV){closeEd();SEL=null;BULK_SEL.clear();renderCanvas();}
+  });
+  cw.addEventListener('contextmenu',e=>{
+    e.preventDefault();closeCtx();
+    const r=cw.getBoundingClientRect();CTX_X=(e.clientX-r.left-TX)/SC;CTX_Y=(e.clientY-r.top-TY)/SC;
+    const node=e.target.closest?.('.node');const cu=node?node.dataset.uid:null;
+    CTX_UID=(cu&&cu!=='__init__')?cu:null;const page=CTX_UID?gP(CTX_UID):null;
+    const ct=document.getElementById('ctit'),ce=document.getElementById('cedit'),cd=document.getElementById('cdupe'),cdl=document.getElementById('cdel'),cs=document.getElementById('cnsep'),cex=document.getElementById('cexpand');
+    if(page){
+      if(ct)ct.textContent=page.id;
+      [ce,cd,cdl,cs,cex].forEach(el=>{if(el)el.style.display='';});
+      const ctg=document.getElementById('ctag');if(ctg)ctg.style.display='';
+      const isExp=EXPANDED_NODES.has(page._uid);
+      if(cex){cex.querySelector('.ico').textContent=isExp?'⊟':'⊞';cex.childNodes[1].textContent=isExp?' Collapse Node':' Expand Node';}
+    } else {
+      if(ct)ct.textContent='Canvas';
+      [ce,cd,cdl,cs,cex].forEach(el=>{if(el)el.style.display='none';});
+      const ctg2=document.getElementById('ctag');if(ctg2)ctg2.style.display='none';
+    }
+    const m=document.getElementById('ctx');if(!m)return;
+    let mx=e.clientX+2,my=e.clientY+2;if(mx+185>window.innerWidth)mx=e.clientX-185;if(my+240>window.innerHeight)my=e.clientY-240;
+    m.style.left=mx+'px';m.style.top=my+'px';m.classList.add('open');
+  });
+  cw.addEventListener('wheel',e=>{e.preventDefault();zoom(e.deltaY>0?-.08:.08,e.clientX,e.clientY);},{passive:false});
+  window.addEventListener('mousedown',e=>{const m=document.getElementById('ctx');if(m&&!m.contains(e.target))closeCtx();},true);
+}
+function closeCtx(){const m=document.getElementById('ctx');if(m)m.classList.remove('open');}
+function ctx_act(a){
+  closeCtx();const d=gD();
+  if(a==='new-npc'||a==='new-player'){addPage(a==='new-npc'?'npc':'player',Math.max(10,CTX_X-110),Math.max(10,CTX_Y-40));}
+  else if(a==='edit'&&CTX_UID){openEd(CTX_UID);}
+  else if(a==='tag'&&CTX_UID){ctx_tag(CTX_UID);}
+  else if(a==='expand'&&CTX_UID){
+    if(EXPANDED_NODES.has(CTX_UID))EXPANDED_NODES.delete(CTX_UID);
+    else EXPANDED_NODES.add(CTX_UID);
+    renderCanvas();
+  }
+  else if(a==='dupe'&&CTX_UID&&d){const src=gP(CTX_UID);if(!src)return;const cl=JSON.parse(JSON.stringify(src));cl._uid=uid();cl.id=src.id+'_copy';cl.x=src.x+40;cl.y=src.y+40;d.pages.push(cl);renderCanvas();openEd(cl._uid);}
+  else if(a==='delete'&&CTX_UID){const src=gP(CTX_UID);if(!src)return;if(!confirm(`Delete "${src.id}"?`))return;delPage(CTX_UID);}
+  else if(a==='settings'){editSettings();}
+  else if(a==='layout'){autoLayout();}
+}
+function mkDrag(el,page){el.addEventListener('mousedown',e=>{if(e.button!==0||e.target.tagName==='BUTTON'||e.target.classList.contains('port')||e.target.classList.contains('socket'))return;
+  if(BULK_SEL.has(page._uid)&&BULK_SEL.size>1){_startBulkMove(e,page);e.preventDefault();e.stopPropagation();return;}
+  DRAG=true;PMOV=true;DI={el,page,mx:e.clientX,my:e.clientY,sx:page.x,sy:page.y};e.preventDefault();e.stopPropagation();});}
+function mkDragIni(el){el.addEventListener('mousedown',e=>{if(e.button!==0||e.target.tagName==='BUTTON'||e.target.classList.contains('port')||e.target.classList.contains('socket'))return;DRAG=true;PMOV=true;DI={el,page:null,mx:e.clientX,my:e.clientY,sx:INX,sy:INY};e.preventDefault();e.stopPropagation();});}
+function zoom(d,cx,cy){const cw=document.getElementById('cw');const r=cw.getBoundingClientRect();const mx=(cx??r.width/2)-r.left,my=(cy??r.height/2)-r.top;const ns=Math.min(2.5,Math.max(.15,SC+d)),ratio=ns/SC;TX=mx-ratio*(mx-TX);TY=my-ratio*(my-TY);SC=ns;applyT();}
+function resetView(){SC=1;TX=40;TY=40;applyT();}
+function applyT(){const c=document.getElementById('cv');if(c)c.style.transform=`translate(${TX}px,${TY}px) scale(${SC})`;}
+
+function setupEditorResize(){
+  const handle=document.getElementById('ed-resize');
+  const ed=document.getElementById('ed');
+  if(!handle||!ed)return;
+  let resizing=false,startX=0,startW=0;
+  handle.addEventListener('mousedown',e=>{
+    if(ed.classList.contains('hidden'))return;
+    resizing=true;startX=e.clientX;startW=ed.offsetWidth;
+    handle.classList.add('dragging');
+    document.body.style.cursor='ew-resize';
+    document.body.style.userSelect='none';
+    e.preventDefault();
+  });
+  window.addEventListener('mousemove',e=>{
+    if(!resizing)return;
+    const delta=startX-e.clientX; // drag left = wider
+    const newW=Math.min(900,Math.max(280,startW+delta));
+    ed.style.width=newW+'px';
+    ed.style.transition='none';
+    ed.classList.remove('expanded');
+  });
+  window.addEventListener('mouseup',()=>{
+    if(!resizing)return;
+    resizing=false;handle.classList.remove('dragging');
+    document.body.style.cursor='';document.body.style.userSelect='';
+    ed.style.transition='';
+  });
+}
+
+// ── WIRE DRAG SYSTEM ─────────────────────────────────────────────────────────
+// Ports sit on the right edge of each node. One port per link slot (option, simple, ac).
+// Slots persist even when disconnected — empty ports can be dragged to create new links.
+// Dropping on a node plugs it; dropping on empty space unplugs (removes the set_page call).
+
+let WIRE = {
+  active:    false,
+  srcUid:    null,   // _uid of source page
+  slotKey:   null,   // linkSlots key identifying which slot is being dragged
+  oldTarget: null,   // current target page.id (or '' if unconnected)
+  startX:    0,
+  startY:    0,
+};
+
+function startWire(e, srcUid, slotKey, oldTargetId) {
+  e.preventDefault();
+  e.stopPropagation();
+  hideNodeTip();
+
+  const rect = e.currentTarget.getBoundingClientRect();
+  WIRE.active    = true;
+  WIRE.srcUid    = srcUid;
+  WIRE.slotKey   = slotKey;
+  WIRE.oldTarget = oldTargetId || null;
+  WIRE.startX    = rect.left + rect.width  / 2;
+  WIRE.startY    = rect.top  + rect.height / 2;
+
+  const overlay = document.getElementById('wire-drag');
+  if (overlay) overlay.style.display = 'block';
+  _updateWirePath(e.clientX, e.clientY);
+}
+
+function _updateWirePath(cx, cy) {
+  const path = document.getElementById('wire-drag-path');
+  if (!path) return;
+  const sx = WIRE.startX, sy = WIRE.startY;
+  const dx = Math.max(Math.abs(cx - sx) * 0.55, 50);
+  path.setAttribute('d', `M${sx},${sy} C${sx+dx},${sy} ${cx-dx},${cy} ${cx},${cy}`);
+}
+
+function _cancelWire() {
+  WIRE.active = false;
+  const overlay = document.getElementById('wire-drag');
+  if (overlay) overlay.style.display = 'none';
+  document.querySelectorAll('.node.drop-target, .socket.drop-target')
+    .forEach(el => el.classList.remove('drop-target'));
+}
+
+function _commitWire(targetUid) {
+  _cancelWire();
+
+  const d = gD(); if (!d) return;
+  const srcPage = d.pages.find(p => p._uid === WIRE.srcUid);
+  if (!srcPage) return;
+
+  const targetPage = targetUid ? d.pages.find(p => p._uid === targetUid) : null;
+
+  // Dropped on self — do nothing
+  if (targetPage && targetPage._uid === WIRE.srcUid) { renderCanvas(); return; }
+
+  const newId = targetPage ? targetPage.id : null;
+  const oldId = WIRE.oldTarget || null;
+
+  // No change
+  if (newId === oldId) { renderCanvas(); return; }
+
+  // Use slot-aware rewrite so only the specific slot is updated
+  rewireSlot(srcPage, WIRE.slotKey, newId);
+  renderCanvas();
+  toast(newId ? `→ ${newId}` : 'Unlinked');
+}
+
+// Rewrite or remove a set_page('oldId') anywhere in a page's input data
+function _rewirePageLink(page, oldId, newId) {
+  const escId = oldId ? oldId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') : null;
+
+  const rep = s => {
+    if (typeof s !== 'string') return s;
+    if (!oldId) return s;
+    if (newId) {
+      return s.replaceAll(`set_page('${oldId}')`, `set_page('${newId}')`);
+    }
+    // Remove the set_page call entirely; clean up trailing semicolons/whitespace
+    return s.replace(
+      new RegExp(`q\\.dialogue\\.set_page\\('${escId}'\\)\\s*;?`, 'g'), ''
+    ).trim();
+  };
+
+  const repArr = a => {
+    const arr = Array.isArray(a) ? a : [a];
+    return arr.map(rep).filter(s => typeof s !== 'string' || s.trim() !== '');
+  };
+
+  const inp = page.input;
+  if (!inp) return;
+
+  if (typeof inp === 'string') {
+    page.input = rep(inp);
+  } else if (Array.isArray(inp)) {
+    const u = inp.map(rep).filter(s => typeof s !== 'string' || s.trim() !== '');
+    page.input = u.length === 1 ? u[0] : (u.length === 0 ? '' : u);
+  } else if (inp.type === 'option') {
+    (inp.options || []).forEach(o => {
+      const updated = repArr(o.action);
+      o.action = updated.length === 1 ? updated[0] : updated;
+    });
+  } else if (inp.type === 'auto-continue') {
+    if (inp.action !== undefined) {
+      const updated = repArr(inp.action);
+      inp.action = updated.length === 1 ? updated[0] : (updated.length === 0 ? '' : updated);
+    }
+  } else if (inp.type === 'none') {
+    // nothing to rewire
+  }
+}
+
+// Window-level mouse handlers for wire drag
+// Use capture so they fire before the canvas pan/node-drag handlers
+(function () {
+  let _wmm = null, _wmu = null;
+
+  function attachWireListeners() {
+    _wmm = e => {
+      if (!WIRE.active) return;
+      _updateWirePath(e.clientX, e.clientY);
+
+      // Highlight candidate drop target
+      document.querySelectorAll('.node.drop-target, .socket.drop-target')
+        .forEach(el => el.classList.remove('drop-target'));
+
+      const hit = document.elementFromPoint(e.clientX, e.clientY);
+      const node = hit && hit.closest('.node');
+      if (node && node.dataset.uid
+          && node.dataset.uid !== WIRE.srcUid
+          && node.dataset.uid !== '__init__') {
+        node.classList.add('drop-target');
+        node.querySelector('.socket')?.classList.add('drop-target');
+      }
+    };
+
+    _wmu = e => {
+      if (!WIRE.active) return;
+      e.stopPropagation();
+
+      const hit = document.elementFromPoint(e.clientX, e.clientY);
+      const node = hit && hit.closest('.node');
+      if (node && node.dataset.uid
+          && node.dataset.uid !== WIRE.srcUid
+          && node.dataset.uid !== '__init__') {
+        _commitWire(node.dataset.uid);
+      } else {
+        _commitWire(null); // drop on empty = unplug
+      }
+    };
+
+    window.addEventListener('mousemove', _wmm, { capture: true });
+    window.addEventListener('mouseup',   _wmu, { capture: true });
+  }
+
+  attachWireListeners();
+})();
+
+
+
+function autoLayout(){
+  const d=gD();if(!d)return;
+  const inc={};d.pages.forEach(p=>inc[p.id]=0);d.pages.forEach(p=>links(p).forEach(l=>{if(l.target)inc[l.target]=(inc[l.target]||0)+1;}));
+  const roots=d.pages.filter(p=>!inc[p.id]);const vis=new Set();const cols={};
+  const q=roots.length?roots.map(p=>({p,col:0})):(d.pages.length?[{p:d.pages[0],col:0}]:[]);
+  while(q.length){const {p,col}=q.shift();if(vis.has(p.id))continue;vis.add(p.id);cols[col]=cols[col]||0;p.x=260+col*270;p.y=60+cols[col]*185;cols[col]++;links(p).forEach(l=>{if(l.target){const tp=d.pages.find(x=>x.id===l.target);if(tp&&!vis.has(tp.id))q.push({p:tp,col:col+1});}});}
+  d.pages.filter(p=>!vis.has(p.id)).forEach((p,i)=>{p.x=260;p.y=60+(Object.values(cols)[0]||0)*185+i*185;});
+  renderCanvas();
+}
+
+// ── MINIMAP ───────────────────────────────────────────────────────────────────
+function updateMM(){
+  const cv=document.getElementById('mmc');if(!cv)return;const ctx=cv.getContext('2d');
+  cv.width=150;cv.height=90;ctx.fillStyle='#0d0f1a';ctx.fillRect(0,0,150,90);
+  const d=gD();if(!d||!d.pages.length)return;
+  const xs=d.pages.map(p=>p.x),ys=d.pages.map(p=>p.y);
+  const mnX=Math.min(...xs)-20,mxX=Math.max(...xs)+240,mnY=Math.min(...ys)-20,mxY=Math.max(...ys)+120;
+  const sc=Math.min(140/(mxX-mnX||1),80/(mxY-mnY||1));
+  d.pages.forEach(p=>{ctx.fillStyle=p.speaker==='player'?'#52e3a0':'#5b8cff';ctx.fillRect(5+(p.x-mnX)*sc,5+(p.y-mnY)*sc,12,6);});
+}
+
+// ── EDITOR ────────────────────────────────────────────────────────────────────
+function openEd(u){
+  EDIT=u;const ed=document.getElementById('ed');if(ed)ed.classList.remove('hidden');
+  const page=gP(u);if(!page)return;
+  const et=document.getElementById('etit');if(et)et.textContent='EDIT: '+page.id;
+  const sb=document.getElementById('sbtn');if(sb)sb.onclick=saveEdit;
+  const db=document.querySelector('.delbtn');if(db)db.style.display='';
+  renderEd(page);
+}
+function closeEd(){const ed=document.getElementById('ed');if(ed)ed.classList.add('hidden');EDIT=null;}
+
+const $v=(id,fb='')=>{const el=document.getElementById(id);return el?el.value:fb;};
+
+function renderEd(page){
+  const d=gD();const allIds=d?d.pages.map(p=>p.id).filter(id=>id!==page.id):[];
+  const qpick=allIds.map(id=>`<option value="q.dialogue.set_page('${id}');">→ ${id}</option>`).join('');
+  const dbpick=DB.map(k=>`<option value="q.player.data.${k} = true; q.player.save_data();">Set ${k}</option>`).join('');
+  const lH=(page.lines||[]).map((ln,i)=>{const isE=typeof ln==='object'&&ln.type==='expression';const v=isE?ln.expression:(typeof ln==='string'?ln:'');
+    return `<div class="li"><div class="fg"><div class="fl">Type <span class="fh"><select class="ltyp" data-i="${i}" style="font-size:10px;padding:1px 3px;width:auto"><option value="text" ${!isE?'selected':''}>Text</option><option value="expr" ${isE?'selected':''}>MoLang</option></select></span></div>
+    <textarea class="ltxt mono" data-i="${i}" oninput="if(_hasMiniMessage(this.value))showMMWarning()">${v}</textarea>
+    <div class="crow">${MC.map(c=>`<div class="ccb" style="background:${c.bg};color:${c.tx}" title="${c.c}" onclick="insCC(${i},'${c.c}')">${c.sym||''}</div>`).join('')}</div></div>
+    <button class="lrm" onclick="rmLine(${i})">✕</button></div>`;}).join('');
+  const itype=page.input?.type||(typeof page.input==='string'?'simple':Array.isArray(page.input)?'simple':'none');
+  const opts=page.input?.options||[];
+  const oH=opts.map((o,oi)=>{const ot=typeof o.text==='string'?o.text:(o.text?.expression||'');const isE=typeof o.text==='object';const acts=Array.isArray(o.action)?o.action.join('\n'):(o.action||'');
+    return `<div class="oi" data-oi="${oi}"><button class="orm" onclick="rmOpt(${oi})">✕</button>
+    <div class="fg"><div class="fl">Text <span class="fh"><select class="otyp" data-oi="${oi}" style="font-size:10px;padding:1px 3px;width:auto"><option value="text" ${!isE?'selected':''}>Text</option><option value="expr" ${isE?'selected':''}>Expr</option></select></span></div><input type="text" class="otxt mono" data-oi="${oi}" value="${ot.replace(/"/g,'&quot;')}"/></div>
+    <div class="fg"><div class="fl">Value</div><input type="text" class="oval" data-oi="${oi}" value="${o.value||''}"/></div>
+    <div class="fg"><div class="fl">isVisible <span class="fh">(blank=always)</span></div><input type="text" class="ovis mono" data-oi="${oi}" value="${o.isVisible||''}"/></div>
+    <div class="fg"><div class="fl">Actions</div><textarea class="oact mono" data-oi="${oi}">${acts}</textarea>
+    <select onchange="insOA(${oi},this)" style="margin-top:4px;font-size:11px"><option value="">— Quick Insert —</option><option value="q.dialogue.close();">Close</option>${qpick}${dbpick}</select></div>
+    </div>`;}).join('');
+  const sv=typeof page.input==='string'?page.input:(Array.isArray(page.input)?page.input.join('\n'):'');
+  const ev=typeof page.escapeAction==='string'?page.escapeAction:(Array.isArray(page.escapeAction)?page.escapeAction.join('\n'):'');
+  document.getElementById('ec').innerHTML=`
+  <div class="fg"><div class="fl">Page ID</div><input type="text" id="eid" class="mono" value="${page.id}"/><div class="hint">Used in q.dialogue.set_page('...')</div></div>
+  <div class="fg"><div class="fl">Speaker</div><select id="espk"><option value="npc" ${page.speaker==='npc'?'selected':''}>NPC</option><option value="player" ${page.speaker==='player'?'selected':''}>Player</option><option value="" ${!page.speaker?'selected':''}>None</option></select></div>
+  <div class="fg"><div class="fl">Lines</div><div id="ll">${lH}</div><button class="as" style="margin-top:5px" onclick="addLine()">+ Add Line</button></div>
+  <div class="fg"><button class="stog" onclick="togS('iws',this)">▶ Input &amp; Options</button><div class="col open" id="iws">
+    <div class="fg"><div class="fl">Type</div><select id="ityp"><option value="none" ${itype==='none'?'selected':''}>None</option><option value="option" ${itype==='option'?'selected':''}>Options</option><option value="auto-continue" ${itype==='auto-continue'?'selected':''}>Auto-continue</option><option value="text" ${itype==='text'?'selected':''}>Text input</option><option value="simple" ${itype==='simple'?'selected':''}>Simple action</option></select></div>
+    <div id="iw-opt" style="${itype==='option'?'':'display:none'}"><div class="fg"><div class="fl">Layout</div><select id="ivert"><option value="true" ${page.input?.vertical!==false?'selected':''}>Vertical</option><option value="false" ${page.input?.vertical===false?'selected':''}>Horizontal</option></select></div><div id="ol">${oH}</div><button class="as" style="margin-top:5px" onclick="addOpt()">+ Add Option</button></div>
+    <div id="iw-sim" style="${itype==='simple'?'':'display:none'}"><textarea id="iact" class="mono">${sv}</textarea></div>
+    <div id="iw-ac" style="${itype==='auto-continue'?'':'display:none'}"><div class="r2"><div class="fg"><div class="fl">Delay(s)</div><input type="number" id="acd" value="${page.input?.delay||5}" step=".5"/></div><div class="fg"><div class="fl">Skip</div><select id="acs"><option value="true" ${page.input?.allowSkip!==false?'selected':''}>Yes</option><option value="false">No</option></select></div></div><div class="fg"><div class="fl">Action</div><textarea id="aca" class="mono">${page.input?.action||''}</textarea></div></div>
+    <div id="iw-tx" style="${itype==='text'?'':'display:none'}"><div class="fg"><div class="fl">Action</div><textarea id="itxa" class="mono">${page.input?.action||''}</textarea></div></div>
+  </div></div>
+  <div class="fg"><button class="stog" onclick="togS('esw',this)">Escape Action</button><div class="col" id="esw"><textarea id="eesc" class="mono" placeholder="q.dialogue.close();">${ev}</textarea><div class="hint">Use '0' to block</div></div></div>
+  <div class="fg"><button class="stog" onclick="togS('styw',this)">Visual Style</button><div class="col" id="styw">
+    <div class="r2"><div class="fg"><div class="fl">Text Color</div><input type="text" id="etcol" value="${page.textColor||''}"/></div><div class="fg"><div class="fl">Background</div><input type="text" id="ebg" value="${page.background||''}"/></div></div>
+    <div class="fg"><div class="fl">Gibber override</div><div class="r2"><div><div class="fl">Interval</div><input type="number" id="egi" value="${page.gibber?.interval||''}" step=".01" placeholder=".1"/></div><div><div class="fl">Step</div><input type="number" id="egs" value="${page.gibber?.step||''}" placeholder="4"/></div></div></div>
+  </div></div>`;
+  const it=document.getElementById('ityp');
+  if(it)it.addEventListener('change',function(){['iw-opt','iw-sim','iw-ac','iw-tx'].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display='none';});const m={option:'iw-opt',simple:'iw-sim','auto-continue':'iw-ac',text:'iw-tx'};const t=document.getElementById(m[this.value]);if(t)t.style.display='';});
+}
+function togS(id,btn){const el=document.getElementById(id);if(!el||!btn)return;el.classList.toggle('open');btn.classList.toggle('open');}
+function insCC(i,c){const ta=document.querySelector(`.ltxt[data-i="${i}"]`);if(!ta)return;const s=ta.selectionStart,e=ta.selectionEnd;ta.value=ta.value.slice(0,s)+c+ta.value.slice(e);ta.selectionStart=ta.selectionEnd=s+c.length;ta.focus();}
+function addLine(){const p=gP(EDIT);if(!p)return;p.lines.push('');renderEd(p);}
+function rmLine(i){const p=gP(EDIT);if(!p)return;p.lines.splice(i,1);renderEd(p);}
+function addOpt(){const p=gP(EDIT);if(!p)return;if(!p.input||typeof p.input!=='object')p.input={type:'option',vertical:true,options:[]};if(!p.input.options)p.input.options=[];p.input.options.push({text:'Option '+(p.input.options.length+1),value:'opt_'+p.input.options.length,action:[]});renderEd(p);}
+function rmOpt(i){const p=gP(EDIT);if(!p||!p.input?.options)return;p.input.options.splice(i,1);renderEd(p);}
+function insOA(oi,sel){if(!sel.value)return;const ta=document.querySelector(`.oact[data-oi="${oi}"]`);if(!ta)return;ta.value=ta.value?ta.value+'\n'+sel.value:sel.value;sel.value='';}
+
+function saveEdit(){
+  if(EDIT==='__settings__'){saveSettings();return;}
+  const page=gP(EDIT);if(!page){toast('No page selected');return;}
+  const newId=$v('eid').trim(),oldId=page.id;
+  if(newId&&newId!==oldId){
+    const d=gD();if(d){
+      const rep=s=>typeof s==='string'?s.replaceAll(`'${oldId}'`,`'${newId}'`):s;
+      const repA=a=>Array.isArray(a)?a.map(rep):rep(a);
+      d.pages.forEach(p=>{if(p.escapeAction)p.escapeAction=rep(p.escapeAction);if(p.input){if(typeof p.input==='string')p.input=rep(p.input);else if(Array.isArray(p.input))p.input=p.input.map(rep);else{if(p.input.action)p.input.action=repA(p.input.action);if(p.input.options)p.input.options.forEach(o=>{if(o.action)o.action=repA(o.action);});}}});
+      d.settings.initActions=d.settings.initActions.map(a=>a.replaceAll(`'${oldId}'`,`'${newId}'`));
+    }page.id=newId;
+  }
+  page.speaker=$v('espk',page.speaker);page.textColor=$v('etcol','');page.background=$v('ebg','');
+  const gi=$v('egi'),gs=$v('egs');page.gibber=(gi||gs)?{...(gi?{interval:parseFloat(gi)}:{}), ...(gs?{step:parseInt(gs)}:{})}:null;
+  const esc=$v('eesc').trim();page.escapeAction=esc||undefined;
+  const lEls=document.querySelectorAll('.ltxt'),lTyps=document.querySelectorAll('.ltyp');
+  page.lines=[];lEls.forEach((ta,i)=>{const isE=lTyps[i]?lTyps[i].value==='expr':false;page.lines.push(isE?{type:'expression',expression:ta.value}:ta.value);});
+  const ityp=document.getElementById('ityp');const it=ityp?ityp.value:'none';
+  if(it==='none'){page.input={type:'none'};}
+  else if(it==='simple'){const lines=$v('iact').trim().split('\n').map(s=>s.trim()).filter(Boolean);page.input=lines.length===1?lines[0]:lines;}
+  else if(it==='auto-continue'){page.input={type:'auto-continue',delay:parseFloat($v('acd'))||5,allowSkip:$v('acs')==='true',action:$v('aca').trim()};}
+  else if(it==='text'){page.input={type:'text',action:$v('itxa').trim()};}
+  else if(it==='option'){
+    const vs=document.getElementById('ivert');const vert=vs?vs.value==='true':true;
+    const ois=document.querySelectorAll('.oi');const options=[];
+    ois.forEach(item=>{const t=item.querySelector('.otxt'),ty=item.querySelector('.otyp'),v=item.querySelector('.oval'),vis=item.querySelector('.ovis'),a=item.querySelector('.oact');
+      if(!t||!v)return;const tv=t.value,tt=ty?ty.value:'text';const text=tt==='expr'?{type:'expression',expression:tv}:tv;
+      const aL=(a?a.value:'').trim().split('\n').map(s=>s.trim()).filter(Boolean);const action=aL.length===1?aL[0]:aL;
+      const opt={text,value:v.value,action};const vv=vis?vis.value.trim():'';if(vv)opt.isVisible=vv;options.push(opt);
+    });
+    page.input={type:'option',vertical:vert,options};
+  }
+  toast('Saved!');renderCanvas();const et=document.getElementById('etit');if(et)et.textContent='EDIT: '+page.id;
+}
+function delNode(){if(!EDIT||EDIT==='__settings__')return;const p=gP(EDIT);if(!p)return;if(!confirm(`Delete "${p.id}"?`))return;delPage(EDIT);closeEd();}
+
+// ── SETTINGS ──────────────────────────────────────────────────────────────────
+let SETTINGS_EXPANDED = false;
+
+function _parseInitAction(str) {
+  // Patterns:
+  // "condition ? q.dialogue.set_page('id');"  → conditional
+  // "q.dialogue.set_page('id');"              → always
+  // anything else                             → raw
+  const condMatch = str.match(/^(.+?)\s*\?\s*q\.dialogue\.set_page\('([^']+)'\)/);
+  if (condMatch) return { type:'cond', cond: condMatch[1].trim(), target: condMatch[2] };
+  const alwaysMatch = str.match(/^q\.dialogue\.set_page\('([^']+)'\)/);
+  if (alwaysMatch) return { type:'always', target: alwaysMatch[1] };
+  return { type:'raw', raw: str };
+}
+
+function _renderCondition(cond) {
+  // Highlight q.player.data.xxx, == true/false, &&, ||
+  return cond
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/(q\.player\.data\.[a-zA-Z0-9_.]+)/g, '<em>$1</em>')
+    .replace(/\b(true|false|null|0\.0|1\.0)\b/g, '<span style="color:var(--a2)">$1</span>')
+    .replace(/(\&\&|\|\|)/g, '<span style="color:#a78bfa">$1</span>');
+}
+
+function _buildIACards(initActions, allIds) {
+  if (!initActions.length) return '<div style="color:var(--dim);font-size:12px;padding:8px 0;text-align:center;font-style:italic">No init actions — add one below</div>';
+  return initActions.map((a, i) => {
+    const p = _parseInitAction(a);
+    const col = i % 8;
+    let inner = '';
+    if (p.type === 'cond') {
+      inner = `
+        <div class="ia-card-head">
+          <span class="ia-card-num" data-n="${col}">${i+1}</span>
+          <span class="ia-card-type ia-type-cond">Conditional</span>
+          <span class="ia-card-arrow">→</span>
+          <span class="ia-card-target">${p.target}</span>
+        </div>
+        <div class="ia-card-cond">if ${_renderCondition(p.cond)}</div>`;
+    } else if (p.type === 'always') {
+      inner = `
+        <div class="ia-card-head">
+          <span class="ia-card-num" data-n="${col}">${i+1}</span>
+          <span class="ia-card-type ia-type-always">Always</span>
+          <span class="ia-card-arrow">→</span>
+          <span class="ia-card-target">${p.target}</span>
+        </div>`;
+    } else {
+      inner = `
+        <div class="ia-card-head">
+          <span class="ia-card-num" data-n="${col}">${i+1}</span>
+          <span class="ia-card-type ia-type-raw">Raw MoLang</span>
+        </div>`;
+    }
+    // Always show editable textarea for the raw value
+    return `<div class="ia-card" data-ia="${i}">
+      ${inner}
+      <textarea class="ia-card-raw iainp" data-i="${i}" oninput="syncIACard(${i},this)">${a.replace(/</g,'&lt;')}</textarea>
+      <button class="ia-card-rm" onclick="rmIA(${i})" title="Remove">✕</button>
+    </div>`;
+  }).join('');
+}
+
+function editSettings(){
+  const d=gD();if(!d)return;EDIT='__settings__';
+  const ed=document.getElementById('ed');
+  if(ed){ed.classList.remove('hidden');if(SETTINGS_EXPANDED)ed.classList.add('expanded');else ed.classList.remove('expanded');}
+  const et=document.getElementById('etit');
+  const sb=document.getElementById('sbtn');if(sb)sb.onclick=saveSettings;
+  const db=document.querySelector('.delbtn');if(db)db.style.display='none';
+  const s=d.settings;const allIds=d.pages.map(p=>p.id);
+  const iaCards = _buildIACards(s.initActions, allIds);
+
+  // Replace entire editor title with a row containing expand button
+  const titleEl = document.getElementById('etit');
+  if (titleEl) {
+    titleEl.outerHTML = `<div class="etit-row"><div class="etit">DIALOGUE SETTINGS</div><button class="expand-btn${SETTINGS_EXPANDED?' active':''}" id="expand-btn" onclick="toggleSettingsExpand()">⊞ ${SETTINGS_EXPANDED?'Collapse':'Expand'}</button></div>`;
+  }
+
+  document.getElementById('ec').innerHTML=`
+  <div class="fg"><div class="fl">Dialogue Name</div><input type="text" id="sname" value="${d.name}"/></div>
+  <div class="fg"><div class="fl">Global Escape</div><textarea id="sesc" class="mono">${s.escapeAction||''}</textarea></div>
+
+  <div class="fg">
+    <button class="stog open" onclick="togS('sia',this)" style="display:flex;align-items:center;justify-content:space-between">
+      <span>Init Actions <span style="color:var(--dim);font-weight:400;font-size:10px;margin-left:6px">(${s.initActions.length})</span></span>
+      <span style="font-size:10px;color:var(--dim);font-weight:400">runs on dialogue open</span>
+    </button>
+    <div class="col open" id="sia">
+      <div style="font-size:11px;color:var(--dim);margin-bottom:10px;line-height:1.6">
+        Each action runs top-to-bottom when the dialogue opens. Use conditions to route players to different starting pages based on their progress flags.
+      </div>
+      <div id="ial">${iaCards}</div>
+      <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
+        <button class="as" style="flex:1" onclick="addIA()">+ Add Action</button>
+        <select style="flex:2;font-size:11px;min-width:0" onchange="insIA(this)">
+          <option value="">— Quick Insert —</option>
+          <optgroup label="Condition → page">
+            ${allIds.map(id=>`<option value="q.player.data.xxx ? q.dialogue.set_page('${id}');">if flag → ${id}</option>`).join('')}
+          </optgroup>
+          <optgroup label="If data flag is set">
+            ${DB.map(k=>`<option value="q.player.data.${k} ? q.dialogue.set_page('target');">if ${k}</option>`).join('')}
+          </optgroup>
+          <optgroup label="Always go to">
+            ${allIds.map(id=>`<option value="q.dialogue.set_page('${id}');">always → ${id}</option>`).join('')}
+          </optgroup>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="fg"><button class="stog" onclick="togS('sspk',this)">Speaker / Gibber</button><div class="col" id="sspk">
+    <div class="srow"><div class="srt" style="color:var(--accent)">NPC <button onclick="openSkinModal('npc')" style="background:rgba(91,140,255,.15);border:1px solid rgba(91,140,255,.3);border-radius:4px;font-size:10px;font-weight:700;padding:2px 7px;cursor:pointer;color:var(--accent);margin-left:6px">🖼 Portrait</button></div><div class="r2"><div class="fg"><div class="fl">Interval</div><input type="number" id="ngi" value="${s.speakers.npc.gi}" step=".01"/></div><div class="fg"><div class="fl">Step</div><input type="number" id="ngs" value="${s.speakers.npc.gs}"/></div></div><div class="fg"><div class="fl">Name expr</div><input type="text" id="nne" class="mono" value="${s.speakers.npc.nameExpr}"/></div></div>
+    <div class="srow"><div class="srt" style="color:var(--a3)">Player <button onclick="openSkinModal('player')" style="background:rgba(82,227,160,.12);border:1px solid rgba(82,227,160,.25);border-radius:4px;font-size:10px;font-weight:700;padding:2px 7px;cursor:pointer;color:var(--a3);margin-left:6px">🖼 Portrait</button></div><div class="r2"><div class="fg"><div class="fl">Interval</div><input type="number" id="pgi" value="${s.speakers.player.gi}" step=".01"/></div><div class="fg"><div class="fl">Step</div><input type="number" id="pgs" value="${s.speakers.player.gs}"/></div></div><div class="fg"><div class="fl">Name expr</div><input type="text" id="pne" class="mono" value="${s.speakers.player.nameExpr}"/></div></div>
+  </div></div>`;
+}
+
+function toggleSettingsExpand() {
+  SETTINGS_EXPANDED = !SETTINGS_EXPANDED;
+  const ed = document.getElementById('ed');
+  if (ed) ed.classList.toggle('expanded', SETTINGS_EXPANDED);
+  const btn = document.getElementById('expand-btn');
+  if (btn) { btn.textContent = `⊞ ${SETTINGS_EXPANDED?'Collapse':'Expand'}`; btn.classList.toggle('active', SETTINGS_EXPANDED); }
+}
+
+// Live-sync a card's textarea back to the data array without full re-render
+function syncIACard(i, ta) {
+  const d = gD(); if (!d) return;
+  d.settings.initActions[i] = ta.value;
+  // Re-render the canvas init block so arrows and rows stay in sync
+  renderCanvas();
+  // Re-parse and update just the card's header visuals in the editor panel
+  const card = document.querySelector(`.ia-card[data-ia="${i}"]`);
+  if (!card) return;
+  const p = _parseInitAction(ta.value);
+  const head = card.querySelector('.ia-card-head');
+  const condEl = card.querySelector('.ia-card-cond');
+  const col = i % 8;
+  if (head) {
+    const num = `<span class="ia-card-num" data-n="${col}">${i+1}</span>`;
+    if (p.type === 'cond') {
+      head.innerHTML = `${num}<span class="ia-card-type ia-type-cond">Conditional</span><span class="ia-card-arrow">→</span><span class="ia-card-target">${p.target}</span>`;
+      if (condEl) condEl.innerHTML = `if ${_renderCondition(p.cond)}`;
+      else { const c=document.createElement('div');c.className='ia-card-cond';c.innerHTML=`if ${_renderCondition(p.cond)}`;head.after(c); }
+    } else if (p.type === 'always') {
+      head.innerHTML = `${num}<span class="ia-card-type ia-type-always">Always</span><span class="ia-card-arrow">→</span><span class="ia-card-target">${p.target}</span>`;
+      if (condEl) condEl.remove();
+    } else {
+      head.innerHTML = `${num}<span class="ia-card-type ia-type-raw">Raw MoLang</span>`;
+      if (condEl) condEl.remove();
+    }
+  }
+}
+
+function addIA(){const d=gD();if(!d)return;d.settings.initActions.push("q.player.data.xxx ? q.dialogue.set_page('target');");renderCanvas();if(EDIT==='__settings__')editSettings();}
+function rmIA(i){const d=gD();if(!d)return;d.settings.initActions.splice(i,1);renderCanvas();if(EDIT==='__settings__')editSettings();}
+function insIA(sel){if(!sel.value)return;const d=gD();if(!d)return;d.settings.initActions.push(sel.value);sel.value='';editSettings();}
+function saveSettings(){
+  const d=gD();if(!d)return;
+  d.name=$v('sname').trim()||d.name;d.settings.escapeAction=$v('sesc').trim();
+  d.settings.speakers.npc.gi=parseFloat($v('ngi'))||.1;d.settings.speakers.npc.gs=parseInt($v('ngs'))||4;d.settings.speakers.npc.nameExpr=$v('nne')||'q.npc.name';
+  d.settings.speakers.player.gi=parseFloat($v('pgi'))||.1;d.settings.speakers.player.gs=parseInt($v('pgs'))||4;d.settings.speakers.player.nameExpr=$v('pne')||'q.player.username';
+  const ias=document.querySelectorAll('.iainp');d.settings.initActions=Array.from(ias).map(i=>i.value.trim()).filter(Boolean);
+  const db=document.querySelector('.delbtn');if(db)db.style.display='';
+  const sb=document.getElementById('sbtn');if(sb)sb.onclick=saveEdit;
+  toast('Settings saved!');renderTabs();renderCanvas();
+}
+
+// ── DATA BANK ─────────────────────────────────────────────────────────────────
+function renderDB(){const el=document.getElementById('dbank');if(!el)return;el.innerHTML=DB.map((k,i)=>`<div class="bi" onclick="copyT('q.player.data.${k}')">q.player.data.${k}<span class="bx" onclick="rmDK(${i});event.stopPropagation()">✕</span></div>`).join('');}
+function addDK(){const inp=document.getElementById('ndk');if(!inp)return;const v=inp.value.trim();if(!v)return;if(!DB.includes(v))DB.push(v);inp.value='';renderDB();}
+function rmDK(i){DB.splice(i,1);renderDB();}
+
+// ── JSON ──────────────────────────────────────────────────────────────────────
+function buildJ(d){
+  d=d||gD();if(!d)return'{}';const s=d.settings,obj={};
+  if(s.escapeAction)obj.escapeAction=s.escapeAction;
+  if(s.initActions?.length)obj.initializationAction=s.initActions.length===1?s.initActions[0]:s.initActions;
+  obj.speakers={npc:{name:{type:'expression',expression:s.speakers.npc.nameExpr||'q.npc.name'},face:s.speakers.npc.face||'q.npc.face();',gibber:{interval:s.speakers.npc.gi,step:s.speakers.npc.gs}},player:{face:s.speakers.player.face||'q.player.face();',name:{type:'expression',expression:s.speakers.player.nameExpr||'q.player.username'},gibber:{interval:s.speakers.player.gi,step:s.speakers.player.gs}}};
+  obj.pages=d.pages.map(pg=>{const p={id:pg.id};if(pg.escapeAction)p.escapeAction=pg.escapeAction;if(pg.speaker)p.speaker=pg.speaker;if(pg.textColor)p.textColor=pg.textColor;if(pg.background)p.background=pg.background;p.lines=pg.lines;if(pg.gibber)p.gibber=pg.gibber;
+    const inp=pg.input;if(!inp||inp.type==='none'){}else if(typeof inp==='string'||Array.isArray(inp))p.input=inp;
+    else if(inp.type==='option')p.input={type:'option',vertical:inp.vertical!==false,options:(inp.options||[]).map(o=>{const op={text:o.text,value:o.value,action:o.action};if(o.isVisible)op.isVisible=o.isVisible;if(o.isSelectable)op.isSelectable=o.isSelectable;return op;})};
+    else if(inp.type==='auto-continue'){p.input={type:'auto-continue',delay:inp.delay,allowSkip:inp.allowSkip};if(inp.action)p.input.action=inp.action;}
+    else if(inp.type==='text')p.input={type:'text',action:inp.action};
+    return p;});
+  return JSON.stringify(obj,null,2);
+}
+function doExport(){const d=gD();document.getElementById('jout').textContent=buildJ(d);document.getElementById('jtit').textContent='EXPORT: '+(d?.name||'');openModal('json-modal');}
+function copyJ(){copyT(document.getElementById('jout').textContent,true);}
+function dlJ(){const d=gD();const b=new Blob([buildJ(d)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=(d?.name||'dialogue').toLowerCase().replace(/\s+/g,'_')+'.json';a.click();toast('Downloaded!');}
+function _parseJSONWithDetail(raw) {
+  // Returns { ok: true, value } or { ok: false, message, line, col, char, context }
+  try {
+    return { ok: true, value: JSON.parse(raw) };
+  } catch(e) {
+    const msg = e.message || 'Invalid JSON';
+
+    // Extract character position from error message
+    // Browsers report: "Unexpected token X at position N" or "... in JSON at position N"
+    let charPos = null;
+    const posMatch = msg.match(/position\s+(\d+)/i) || msg.match(/at\s+(\d+)$/);
+    if (posMatch) charPos = parseInt(posMatch[1], 10);
+
+    // If no position from message, try to find it from context clues
+    if (charPos === null) {
+      // Some engines report line:col instead
+      const lcMatch = msg.match(/line\s+(\d+)\s+col(?:umn)?\s+(\d+)/i);
+      if (lcMatch) {
+        // Convert line:col to char offset
+        const targetLine = parseInt(lcMatch[1], 10) - 1;
+        const targetCol  = parseInt(lcMatch[2], 10) - 1;
+        const lines = raw.split('\n');
+        charPos = lines.slice(0, targetLine).reduce((n, l) => n + l.length + 1, 0) + targetCol;
+      }
+    }
+
+    // Compute line + column from char position
+    let line = 1, col = 1, lineStart = 0;
+    if (charPos !== null) {
+      for (let i = 0; i < Math.min(charPos, raw.length); i++) {
+        if (raw[i] === '\n') { line++; col = 1; lineStart = i + 1; }
+        else col++;
+      }
+    }
+
+    // Build context snippet: the offending line with a caret below
+    let context = null;
+    if (charPos !== null) {
+      const rawLines = raw.split('\n');
+      const li = line - 1;
+      const snippet = rawLines[li] || '';
+      // Show up to 3 lines around the error
+      const from = Math.max(0, li - 1);
+      const to   = Math.min(rawLines.length - 1, li + 1);
+      const ctxLines = [];
+      for (let r = from; r <= to; r++) {
+        const prefix = r === li ? '→ ' : '  ';
+        const lineNum = String(r + 1).padStart(4, ' ');
+        ctxLines.push(`${lineNum} ${prefix}${rawLines[r]}`);
+        if (r === li) {
+          // Caret line — offset by col (4 linenum + 4 spaces + prefix)
+          const caretOffset = 4 + 1 + 2 + (col - 1); // lineNum + space + "→ " + col
+          ctxLines.push(' '.repeat(caretOffset) + '^');
+        }
+      }
+      context = ctxLines.join('\n');
+    }
+
+    return { ok: false, message: msg, line, col, charPos, context };
+  }
+}
+
+function showImportError(result) {
+  const box    = document.getElementById('imp-error');
+  const msgEl  = document.getElementById('imp-error-msg');
+  const locEl  = document.getElementById('imp-error-loc');
+  const ctxEl  = document.getElementById('imp-error-ctx');
+  if (!box) return;
+
+  box.style.display = 'block';
+  msgEl.textContent = result.message;
+
+  if (result.charPos !== null) {
+    locEl.textContent = `Line ${result.line}, column ${result.col} (character ${result.charPos})`;
+  } else {
+    locEl.textContent = '';
+  }
+
+  if (result.context) {
+    ctxEl.style.display = 'block';
+    ctxEl.textContent = result.context;
+    // Scroll textarea to the error line
+    const ta = document.getElementById('ijson');
+    if (ta && result.line > 1) {
+      const lineH = ta.scrollHeight / (ta.value.split('\n').length || 1);
+      ta.scrollTop = (result.line - 3) * lineH;
+    }
+  } else {
+    ctxEl.style.display = 'none';
+  }
+}
+
+function clearImportError() {
+  const box = document.getElementById('imp-error');
+  if (box) box.style.display = 'none';
+}
+
+function validateImportJSON() {
+  const raw = $v('ijson').trim();
+  if (!raw) { clearImportError(); return; }
+  const result = _parseJSONWithDetail(raw);
+  if (result.ok) {
+    clearImportError();
+    toast('✓ Valid JSON');
+  } else {
+    showImportError(result);
+  }
+}
+
+function doImport(){
+  const name=$v('iname').trim()||'Imported';
+  const raw=$v('ijson').trim();
+  if (!raw) { toast('Paste some JSON first'); return; }
+  const result = _parseJSONWithDetail(raw);
+  if (!result.ok) { showImportError(result); return; }
+  clearImportError();
+  const id=newDialogue(name);importInto(id,result.value);closeModal('imp-modal');toast('Imported!');autoLayout();renderCanvas();
+}
+function importInto(did,parsed){
+  const d=DL.find(x=>x.id===did);if(!d)return;const s=d.settings;
+  if(parsed.escapeAction)s.escapeAction=parsed.escapeAction;
+  if(parsed.initializationAction)s.initActions=Array.isArray(parsed.initializationAction)?parsed.initializationAction:[parsed.initializationAction];
+  const npc=parsed.speakers?.npc,pl=parsed.speakers?.player;
+  if(npc?.gibber?.interval)s.speakers.npc.gi=npc.gibber.interval;if(npc?.gibber?.step)s.speakers.npc.gs=npc.gibber.step;if(npc?.name?.expression)s.speakers.npc.nameExpr=npc.name.expression;
+  if(pl?.gibber?.interval)s.speakers.player.gi=pl.gibber.interval;if(pl?.gibber?.step)s.speakers.player.gs=pl.gibber.step;if(pl?.name?.expression)s.speakers.player.nameExpr=pl.name.expression;
+  let xi=260,yi=60;
+  d.pages=(parsed.pages||[]).map(pg=>{const p={_uid:uid(),id:pg.id||'page_'+xi,speaker:pg.speaker||'npc',lines:pg.lines||[],input:pg.input||{type:'none'},escapeAction:pg.escapeAction||'',textColor:pg.textColor||'',background:pg.background||'',gibber:pg.gibber||null,x:xi,y:yi};xi+=270;if(xi>1600){xi=260;yi+=185;}return p;});
+  for(const m of JSON.stringify(parsed).matchAll(/q\.player\.data\.([a-zA-Z0-9_.]+)/g)){if(!DB.includes(m[1]))DB.push(m[1]);}
+  renderDB();
+}
+
+// ── UTILITIES ─────────────────────────────────────────────────────────────────
+function openModal(id){const el=document.getElementById(id);if(el)el.classList.add('open');}
+function closeModal(id){const el=document.getElementById(id);if(el)el.classList.remove('open');}
+function toast(msg){const t=document.getElementById('toast');if(!t)return;t.textContent=msg;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2000);}
+function copyT(txt,isJ=false){navigator.clipboard?.writeText(txt).then(()=>toast(isJ?'Copied JSON!':'Copied!'));}
+document.querySelectorAll('.modal').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');}));
+
+// ════════════════════════════════════════════════════════════
+//  PREVIEW SYSTEM
+// ════════════════════════════════════════════════════════════
+const ASSETS = {
+  box:    'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMIAAABICAYAAACkyiqPAAABCGlDQ1BJQ0MgUHJvZmlsZQAAeJxjYGA8wQAELAYMDLl5JUVB7k4KEZFRCuwPGBiBEAwSk4sLGHADoKpv1yBqL+viUYcLcKakFicD6Q9ArFIEtBxopAiQLZIOYWuA2EkQtg2IXV5SUAJkB4DYRSFBzkB2CpCtkY7ETkJiJxcUgdT3ANk2uTmlyQh3M/Ck5oUGA2kOIJZhKGYIYnBncAL5H6IkfxEDg8VXBgbmCQixpJkMDNtbGRgkbiHEVBYwMPC3MDBsO48QQ4RJQWJRIliIBYiZ0tIYGD4tZ2DgjWRgEL7AwMAVDQsIHG5TALvNnSEfCNMZchhSgSKeDHkMyQx6QJYRgwGDIYMZAKbWPz9HbOBQAAAEA0lEQVR4nO3d3U7jRhjG8f9MZhJigvYMkKpV1aZ7A1xWz3rU6+x+VF2pZ91WrNQilQQU7Jl5e+DEm2QDlJVaA3l+UgJ24thI83jm9Qdx3//wo02/+ZrpdMqr76a8fPkVh6MDoFDXNbsYHgBH2fm6yP9ju/35jSkzw8wopRBCIKWCcw7nHOcfP/Lrbx948+4tb356TTg5OaGqqu4NpRSurq4wy8QYd67esO43kf5st7/N6eFwSM6ZnDMhBLwH5xxN01DXNefn58QYOTs7IxweHpJzpq5rzIzhcEjAEYKnaZpbVr/qEdx/8deJ/Evb7W+zR2iahlIKOWecc4DHe9/NOz095cMfvzOpDgmDwYBS2i5j1Y3UKVPXtw97NDSSx+HuoVGMEe/bxj8YDMjZ8N4TYyTGyMXFBQcHB3jvCd57Sm4IIeCcaxeKHrN86+oVBHkc7g5CzhnvPWZGSomUCqUUzIycM1VVkVKiXty0PULd3OCc4+bmhqZpGITYFRq7rOYqCNKvu9vfqjcAliMeRwiBnNudfCmFyWTCxZ9/ERaLBZYzo9GIGCODwQDvPTnbcly1i1s+q0aQPm23v83pnHO3Q18fIq33CiklqqpqewSj0DRNt1BK6Y4QiDwN3vuu9gW6Itms3cmHELq62N/zWSLPVimF+XzOZDJREGR/Oec4OjpiPp8T+t4Ykb6MRiOur6+xXBQE2V+z2YzJZEKqGw2NZH+F0PYDKSUFQfbX6ghpXde7g6BL6eT5893pgqqq8Oag7DhlYGvznLWPbprPT2WIPDWuOA7imGaxViPsCoPIczYcDpnNrtqL8/reGJG+pJSIMbYXm/a9MSJ9MTNijO1Vqn1vjEhf2nsUcnuhad8bI9KXtkaYtVen9r0xIn25vLzk+PiYxWKhIMj+Go/HzGZ/8+LFCwVB9lemvZXz1jPLIvuiPXGsG3NEgO3b/kX2lIIggoIgAigIIoCCIEJxCoIIoCDInlrdf7O6AU1BEEFBEAEUBBFAQRABFAQRQEEQARQEEUBBEAEUBBFAQRABFAQRQEEQARQEEUBBEAEUBBFAQRABFAQRQEEQARQEEUBBEAEUBBFAQRABFAQRQEEQARQEEUBBEAEUBBFAQRABFAQRAAKudBMGtNmwexYr97wu8rj5ZRN3y5/BnGHOWDV+Y/nFCeZZNfjVv87eDIA6E+nbQ9tg2Xh4WwZh/YtCPjX2h3yoyNPnTbt1EWAtCG6tLPD3lQgiz4x3thkCkX302dDowaWCyFO2PGr6RTWCuS8prkUeF4d1R466IHhTbyB7yhnh57fvePXtFDMjhIArhvPgvSfnvLWErT0DpuJCHi/nPu3aU0qEEABYLBaMx2NSSpgZ79//wj8SxpKIewwaDgAAAABJRU5ErkJggg==',
+  boxInfo:'data:image/png;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSUNDX1BST0ZJTEUAAQEAAAHIAAAAAAQwAABtbnRyUkdCIFhZWiAH4AABAAEAAAAAAABhY3NwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAA9tYAAQAAAADTLQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlkZXNjAAAA8AAAACRyWFlaAAABFAAAABRnWFlaAAABKAAAABRiWFlaAAABPAAAABR3dHB0AAABUAAAABRyVFJDAAABZAAAAChnVFJDAAABZAAAAChiVFJDAAABZAAAAChjcHJ0AAABjAAAADxtbHVjAAAAAAAAAAEAAAAMZW5VUwAAAAgAAAAcAHMAUgBHAEJYWVogAAAAAAAAb6IAADj1AAADkFhZWiAAAAAAAABimQAAt4UAABjaWFlaIAAAAAAAACSgAAAPhAAAts9YWVogAAAAAAAA9tYAAQAAAADTLXBhcmEAAAAAAAQAAAACZmYAAPKnAAANWQAAE9AAAApbAAAAAAAAAABtbHVjAAAAAAAAAAEAAAAMZW5VUwAAACAAAAAcAEcAbwBvAGcAbABlACAASQBuAGMALgAgADIAMAAxADb/2wBDAAUDBAQEAwUEBAQFBQUGBwwIBwcHBw8LCwkMEQ8SEhEPERETFhwXExQaFRERGCEYGh0dHx8fExciJCIeJBweHx7/2wBDAQUFBQcGBw4ICA4eFBEUHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh7/wAARCABKANADASIAAhEBAxEB/8QAGgABAAMBAQEAAAAAAAAAAAAAAAUGCAcCBP/EADwQAAEBBQQFCgQEBwAAAAAAAAADAQIFBtEEFlWUBxE1sbIIITM3QXJzdISzEhNRcSMxofAVJERSZIHB/8QAFwEBAQEBAAAAAAAAAAAAAAAAAAECA//EABsRAQEBAAMBAQAAAAAAAAAAAAARASExMkJB/9oADAMBAAIRAxEAPwCD0awKCLQdD58IsCv8sm38SzuPfm6z6sLbduXcAhWTToQei/Y6HlkuFhcTbkirty7gEKyadBduXcAhWTToSoAirty7gEKyadBduXcAhWTToSoAirty7gEKyadBduXcAhWTToSoAirty7gEKyadBduXcAhWTToSoAirty7gEKyadBduXcAhWTToSoAirty7gEKyadBduXcAhWTToSoAirty7gEKyadBduXcAhWTToSoAirty7gEKyadBduXcAhWTToSoAirty7gEKyadBduXcAhWTToSoAirty7gEKyadBduXcAhWTToSoAirty7gEKyadDyvLcusRfayAwpjWOt/o0/p9iXPC/QKd1u4Di0blyC2+0xOyrWWz2dN6zpPNUdcY78Gp5Xn7Obm/7zN5yY0dWVKxaPoTZUV3V0037S66ozt/Hf/fZ9mFL0ofxu1zDZ4NCGvOu21FnznnWc7Phfe1c/wDtu/m1a2X+UYQyBSbC4U6q1X5DFdbzfq8o15v6t1F/Tekxov2Oh5ZLhYXEp2i/Y6HlkuFhcQAAIAAAAAAAAAAAAAAAAAAAAAAAAB4X6BTut3Hs8L9Ap3W7gM6aUphtcuzlDrXZm63HkHmKuf3O/G396tzdTWdLlyK2eNSrDYnZWPMSWYpqY3sax9rrf1Y043ygNv2DwHuM6Roi6q4F6j33y3ldzjFu0X7HQ8slwsLiU7RfsdDyyXCwuIQABAAAAAAAAAAAAAAAAAAAAAAAAAPC/QKd1u49nhfoFO63cBlvlAbfsHgPcZ0jRF1VwL1HvvnN+UBt+weA9xnSNEXVXAvUe++Ppd84t2i/Y6HlkuFhcSnaL9joeWS4WFxKgACAAAAAAAAAAAAAAAAAAAAAAAAAeF+gU7rdx7PC/QKd1u4DLfKA2/YPAe4zpGiLqrgXqPffOb8oDb9g8B7jOkaIuquBeo998fS75xbtF+x0PLJcLC4mXYDG4zZoTZWWaLW9FjUHNbE7S+72M+jT77yTFj8VzilRSNJgzZeSYsfiucUqLyTFj8VzilSUjSYM2XkmLH4rnFKi8kxY/Fc4pUUjSYM2XkmLH4rnFKi8kxY/Fc4pUUjSYM2XkmLH4rnFKi8kxY/Fc4pUUjSYM2XkmLH4rnFKi8kxY/Fc4pUUjSYM2XkmLH4rnFKi8kxY/Fc4pUUjSYM2XkmLH4rnFKi8kxY/Fc4pUUjSYM2XkmLH4rnFKi8kxY/Fc4pUUjSYM2XkmLH4rnFKi8kxY/Fc4pUUjSYM2XkmLH4rnFKi8kxY/Fc4pUUjSZ4X6BTut3Gb7yTFj8VzilQ2ZJiazU2PRVrG/wCYpUtIi+UBt+weA9xnSNEXVXAvUe++cNn202i0xZJ60WhVZ75LG61H2vN/Nv1+zDuWiLqrgXqPffGdrvl//9k=',
+  btn:    'data:image/png;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSUNDX1BST0ZJTEUAAQEAAAHIAAAAAAQwAABtbnRyUkdCIFhZWiAH4AABAAEAAAAAAABhY3NwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAA9tYAAQAAAADTLQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlkZXNjAAAA8AAAACRyWFlaAAABFAAAABRnWFlaAAABKAAAABRiWFlaAAABPAAAABR3dHB0AAABUAAAABRyVFJDAAABZAAAAChnVFJDAAABZAAAAChiVFJDAAABZAAAAChjcHJ0AAABjAAAADxtbHVjAAAAAAAAAAEAAAAMZW5VUwAAAAgAAAAcAHMAUgBHAEJYWVogAAAAAAAAb6IAADj1AAADkFhZWiAAAAAAAABimQAAt4UAABjaWFlaIAAAAAAAACSgAAAPhAAAts9YWVogAAAAAAAA9tYAAQAAAADTLXBhcmEAAAAAAAQAAAACZmYAAPKnAAANWQAAE9AAAApbAAAAAAAAAABtbHVjAAAAAAAAAAEAAAAMZW5VUwAAACAAAAAcAEcAbwBvAGcAbABlACAASQBuAGMALgAgADIAMAAxADb/2wBDAAUDBAQEAwUEBAQFBQUGBwwIBwcHBw8LCwkMEQ8SEhEPERETFhwXExQaFRERGCEYGh0dHx8fExciJCIeJBweHx7/2wBDAQUFBQcGBw4ICA4eFBEUHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh7/wAARCAA/AGADASIAAhEBAxEB/8QAGgAAAgMBAQAAAAAAAAAAAAAAAAMFBgcEAv/EADUQAAADBAYJAgUFAAAAAAAAAAACAwEEBQYVFlaV0dIHERIUVFWTlqMTITEzNUF0UXWys7T/xAAUAQEAAAAAAAAAAAAAAAAAAAAA/8QAFBEBAAAAAAAAAAAAAAAAAAAAAP/aAAwDAQACEQMRAD8AjIO8y27wOGJVehqhmODu1Q6kMd1DHO1IrTGaYzGtbrM1rfcdVIS5ZuEXO65RXHT6a4fhO/8AUQMAT9IS5ZuEXO65QUhLlm4Rc7rlEAABP0hLlm4Rc7rlBSEuWbhFzuuUQAAE/SEuWbhFzuuUFIS5ZuEXO65RAAAT9IS5ZuEXO65QUhLlm4Rc7rlEAABP0hLlm4Rc7rlHLGHmW3iBxNKr0NTM1weGpnThjumYh2JGaUzDFYxrNRmMb7CKC3v6a/8A4Tx/UcBMy/J0+v0vwx8RkwqyCrmiZFRsedEGqJ+mXYNsHbtF1l1N9/1HdUPSDYhPuVxxFmgcwRdGWoEik97JE4O4lKz0yN1MY7JsZ9h11ljXG+ImACnVD0g2IT7lccQVD0g2IT7lccRcayxrjfETAFZY1xviJgAp1Q9INiE+5XHEFQ9INiE+5XHEXGssa43xEwBWWNcb4iYAKdUPSDYhPuVxxBUPSDYhPuVxxFxrLGuN8RMAVljXG+ImACnVD0g2IT7lccQVD0g2IT7lccRcayxrjfETAFZY1xviJgAp1Q9INiE+5XHEcMwSdPrjL8TfFpMKigk5rGWUZHnRdqafpm2zbBG7RtRdbfb9Bf6yxrjfETAckcmCLrS1HUVXvaIpB34pmemRmtjXZRjfsAi4V9Ag37S5f50x0DIYdFY05w51d0JlmJFIqJGlTQiR00yMaVjdRSs+DGaw+n4/aqab3PgA1cAyin4/aqab3PgCn4/aqab3PgA1cAyin4/aqab3PgCn4/aqab3PgA1cAyin4/aqab3PgCn4/aqab3PgA1cAyin4/aqab3PgCn4/aqab3PgA1cc8V+gRn9pff86gzCn4/aqab3PgERGKxp8hz07rzLMSyRkTtMmvEjqJnYwrW6jFb8WN1AOMvyHf8dL+BQDnRf3AzuhtPiaZiokIYpiH1sawrGN+BWs+w975DuYI9NTKAaAK3yHcwR6amUG+Q7mCPTUygGgCt8h3MEemplBvkO5gj01MoBoArfIdzBHpqZQb5DuYI9NTKAaAK3yHcwR6amUG+Q7mCPTUygGgN8h4/HV/gYK3yHcwR6amUeFn9wK7r7L4moYyJyFKUh9bWtK1jPiVjPuA/9k=',
+  name:   'data:image/png;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSUNDX1BST0ZJTEUAAQEAAAHIAAAAAAQwAABtbnRyUkdCIFhZWiAH4AABAAEAAAAAAABhY3NwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAA9tYAAQAAAADTLQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlkZXNjAAAA8AAAACRyWFlaAAABFAAAABRnWFlaAAABKAAAABRiWFlaAAABPAAAABR3dHB0AAABUAAAABRyVFJDAAABZAAAAChnVFJDAAABZAAAAChiVFJDAAABZAAAAChjcHJ0AAABjAAAADxtbHVjAAAAAAAAAAEAAAAMZW5VUwAAAAgAAAAcAHMAUgBHAEJYWVogAAAAAAAAb6IAADj1AAADkFhZWiAAAAAAAABimQAAt4UAABjaWFlaIAAAAAAAACSgAAAPhAAAts9YWVogAAAAAAAA9tYAAQAAAADTLXBhcmEAAAAAAAQAAAACZmYAAPKnAAANWQAAE9AAAApbAAAAAAAAAABtbHVjAAAAAAAAAAEAAAAMZW5VUwAAACAAAAAcAEcAbwBvAGcAbABlACAASQBuAGMALgAgADIAMAAxADb/2wBDAAUDBAQEAwUEBAQFBQUGBwwIBwcHBw8LCwkMEQ8SEhEPERETFhwXExQaFRERGCEYGh0dHx8fExciJCIeJBweHx7/2wBDAQUFBQcGBw4ICA4eFBEUHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh7/wAARCAARAMQDASIAAhEBAxEB/8QAFwABAQEBAAAAAAAAAAAAAAAAAAQDBv/EACgQAAEDAwUAAQMFAAAAAAAAAAABBBQCAwVUVZOU0hEHEyESMWFxkf/EABQBAQAAAAAAAAAAAAAAAAAAAAD/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwDjcezY28YxRMdj6v1NLNdVVbS3XUq1W6VVVVaVVfyqm0dltmM6Nrya45u4vYrH3LNi7coVlYRKqKFVPlLVKL+U/lDeE80jjjUCOOy2zGdG15EdltmM6NryWQnmkccaiE80jjjUCOOy2zGdG15EdltmM6NryWQnmkccaiE80jjjUCOOy2zGdG15EdltmM6NryWQnmkccaiE80jjjUCOOy2zGdG15EdltmM6NryWQnmkccaiE80jjjUCOOy2zGdG15EdltmM6NryWQnmkccaiE80jjjUCOOy2zGdG15EdltmM6NryWQnmkccaiE80jjjUCOOy2zGdG15EdltmM6NryWQnmkccaiE80jjjUCOOy2zGdG15EdltmM6NryWQnmkccaiE80jjjUCOOy2zGdG15EdltmM6NryWQnmkccaiE80jjjUCOOy2zGdG15EdltmM6NryWQnmkccaiE80jjjUCOOy2zGdG15EdltmM6NryWQnmkccaiE80jjjUDgvqE3b2MmzVu3s2PuNErrptW0opVfuXE+fhPhP2RP8Bt9S6aqMqxt1otNdDJEqpVPhUX7txfyn9KgA5QAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAf/Z',
+  portL:  'data:image/png;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSUNDX1BST0ZJTEUAAQEAAAHIAAAAAAQwAABtbnRyUkdCIFhZWiAH4AABAAEAAAAAAABhY3NwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAA9tYAAQAAAADTLQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlkZXNjAAAA8AAAACRyWFlaAAABFAAAABRnWFlaAAABKAAAABRiWFlaAAABPAAAABR3dHB0AAABUAAAABRyVFJDAAABZAAAAChnVFJDAAABZAAAAChiVFJDAAABZAAAAChjcHJ0AAABjAAAADxtbHVjAAAAAAAAAAEAAAAMZW5VUwAAAAgAAAAcAHMAUgBHAEJYWVogAAAAAAAAb6IAADj1AAADkFhZWiAAAAAAAABimQAAt4UAABjaWFlaIAAAAAAAACSgAAAPhAAAts9YWVogAAAAAAAA9tYAAQAAAADTLXBhcmEAAAAAAAQAAAACZmYAAPKnAAANWQAAE9AAAApbAAAAAAAAAABtbHVjAAAAAAAAAAEAAAAMZW5VUwAAACAAAAAcAEcAbwBvAGcAbABlACAASQBuAGMALgAgADIAMAAxADb/2wBDAAUDBAQEAwUEBAQFBQUGBwwIBwcHBw8LCwkMEQ8SEhEPERETFhwXExQaFRERGCEYGh0dHx8fExciJCIeJBweHx7/2wBDAQUFBQcGBw4ICA4eFBEUHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh7/wAARCAAkACYDASIAAhEBAxEB/8QAGAABAQEBAQAAAAAAAAAAAAAAAAcDBAX/xAA0EAABAwICBAwGAwAAAAAAAAABAgMEAAUGERIhMVUHExYXQVZhcpGU0dMUFTZHs7RRUmL/xAAUAQEAAAAAAAAAAAAAAAAAAAAA/8QAFBEBAAAAAAAAAAAAAAAAAAAAAP/aAAwDAQACEQMRAD8AkYGHsAYThvvwW5ipSG3CXGEOKWpaArIaQIGQO3pyP+UjzOdDDPVpvyMf0pw1/Rth7kf9cVIaCvc6GGerTfkY/pTnQwz1ab8jH9KkNKC/YoVbpuDo90hRIrQdkNFtbUdLRKFIcORyA/qNv8Uri+0lp78b8TtKDzOGv6NsPcj/AK4qQ1Z+F2BMnYNs3wcZyQWmoylhtOZA4hI2bTrI2VJ/kt53TP8ALr9KDgpXf8lvO6Z/l1+lbwMN3ybMait2yUhTisgp1pSEp7SSKCt/aS09+N+J2laYkEaxYCt1nlzGUvIca0NI6OmlCHElXYMyB268s8jkoMouMpzEVmOYFvd4ltLaVrS5pEJAAzyWBsA6K15bTd12zwd9ylKBy2m7rtng77lOW03dds8HfcpSgkOLrrOu19lSJ75dWlxSR0AAHLUNg1AeAA1AClKUH//Z',
+  portR:  'data:image/png;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSUNDX1BST0ZJTEUAAQEAAAHIAAAAAAQwAABtbnRyUkdCIFhZWiAH4AABAAEAAAAAAABhY3NwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAA9tYAAQAAAADTLQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlkZXNjAAAA8AAAACRyWFlaAAABFAAAABRnWFlaAAABKAAAABRiWFlaAAABPAAAABR3dHB0AAABUAAAABRyVFJDAAABZAAAAChnVFJDAAABZAAAAChiVFJDAAABZAAAAChjcHJ0AAABjAAAADxtbHVjAAAAAAAAAAEAAAAMZW5VUwAAAAgAAAAcAHMAUgBHAEJYWVogAAAAAAAAb6IAADj1AAADkFhZWiAAAAAAAABimQAAt4UAABjaWFlaIAAAAAAAACSgAAAPhAAAts9YWVogAAAAAAAA9tYAAQAAAADTLXBhcmEAAAAAAAQAAAACZmYAAPKnAAANWQAAE9AAAApbAAAAAAAAAABtbHVjAAAAAAAAAAEAAAAMZW5VUwAAACAAAAAcAEcAbwBvAGcAbABlACAASQBuAGMALgAgADIAMAAxADb/2wBDAAUDBAQEAwUEBAQFBQUGBwwIBwcHBw8LCwkMEQ8SEhEPERETFhwXExQaFRERGCEYGh0dHx8fExciJCIeJBweHx7/2wBDAQUFBQcGBw4ICA4eFBEUHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh7/wAARCAAkACYDASIAAhEBAxEB/8QAGQABAQEAAwAAAAAAAAAAAAAAAAcEAwUG/8QANRAAAQMCAgUJBwUAAAAAAAAAAQIDBAAFBhESIVWU0QcTFRYXMVZykRQ2QUeztNMjUVJhcf/EABQBAQAAAAAAAAAAAAAAAAAAAAD/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCa327WTC+G7fLl2uI9zsdgACG2ta1qbSpR0lD+ydZrzXahhnw03uMfhTlr9zbD5I/24qQ0Fe7UMM+Gm9xj8KdqGGfDTe4x+FSGlBZseWCx32xw8SRW/Z+cWhv9BAbC0qSpQOjlknLR7steYOo56StfyktPnjfSdpQdZy1+5th8kf7cVIat+O7U5irA1tdtD7bxjstEAHUtSGglSM/gf979R7iDUf6FvOyZ+7r4UGClb+hbzsmfu6+FOhbzsmfu6+FBYvlJafPG+k7SuWZHeicl1tiyGy2807HStJOeRDbtKCe8mGIrlaZz0dhSHYymypTDoJQSDq7iCO8nUf3+BINB67Tdl2z0d/JSlA67Tdl2z0d/JTrtN2XbPR38lKUGC+Ykl3aEmG7FiMNBwOHmQvMkAgZ6Sj/I0pSg/9k=',
+  portBg: 'data:image/png;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSUNDX1BST0ZJTEUAAQEAAAHIAAAAAAQwAABtbnRyUkdCIFhZWiAH4AABAAEAAAAAAABhY3NwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAA9tYAAQAAAADTLQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlkZXNjAAAA8AAAACRyWFlaAAABFAAAABRnWFlaAAABKAAAABRiWFlaAAABPAAAABR3dHB0AAABUAAAABRyVFJDAAABZAAAAChnVFJDAAABZAAAAChiVFJDAAABZAAAAChjcHJ0AAABjAAAADxtbHVjAAAAAAAAAAEAAAAMZW5VUwAAAAgAAAAcAHMAUgBHAEJYWVogAAAAAAAAb6IAADj1AAADkFhZWiAAAAAAAABimQAAt4UAABjaWFlaIAAAAAAAACSgAAAPhAAAts9YWVogAAAAAAAA9tYAAQAAAADTLXBhcmEAAAAAAAQAAAACZmYAAPKnAAANWQAAE9AAAApbAAAAAAAAAABtbHVjAAAAAAAAAAEAAAAMZW5VUwAAACAAAAAcAEcAbwBvAGcAbABlACAASQBuAGMALgAgADIAMAAxADb/2wBDAAUDBAQEAwUEBAQFBQUGBwwIBwcHBw8LCwkMEQ8SEhEPERETFhwXExQaFRERGCEYGh0dHx8fExciJCIeJBweHx7/2wBDAQUFBQcGBw4ICA4eFBEUHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh7/wAARCAAkACYDASIAAhEBAxEB/8QAGwABAQADAAMAAAAAAAAAAAAAAAYDBAUCBwj/xAAqEAAABQEFCAMBAAAAAAAAAAAAAQIDBBEFMTVz0QYVFlNUkpOyEhOB8P/EABQBAQAAAAAAAAAAAAAAAAAAAAD/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwD48s2C/aEn6GPiSiSajNR0Ii/qDpcMT+dG7laBsViruQfskV4CQ4Yn86N3K0Dhifzo3crQV4APW7ra2nVtOFRaFGlRVuMrwGe1sVl56/YwAdLYrFXcg/ZIrxGbJyGI9pqU+6ltKmjSRqOhVqR3/hiq3hA66N5U6gNkBrbwgddG8qdQ3hA66N5U6gIe1sVl56/YwHhaDiHZ8h1s6oW6pSTpeRmdAAYAAAAAAAAAAf/Z',
+  timer:  'data:image/png;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSUNDX1BST0ZJTEUAAQEAAAHIAAAAAAQwAABtbnRyUkdCIFhZWiAH4AABAAEAAAAAAABhY3NwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAA9tYAAQAAAADTLQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlkZXNjAAAA8AAAACRyWFlaAAABFAAAABRnWFlaAAABKAAAABRiWFlaAAABPAAAABR3dHB0AAABUAAAABRyVFJDAAABZAAAAChnVFJDAAABZAAAAChiVFJDAAABZAAAAChjcHJ0AAABjAAAADxtbHVjAAAAAAAAAAEAAAAMZW5VUwAAAAgAAAAcAHMAUgBHAEJYWVogAAAAAAAAb6IAADj1AAADkFhZWiAAAAAAAABimQAAt4UAABjaWFlaIAAAAAAAACSgAAAPhAAAts9YWVogAAAAAAAA9tYAAQAAAADTLXBhcmEAAAAAAAQAAAACZmYAAPKnAAANWQAAE9AAAApbAAAAAAAAAABtbHVjAAAAAAAAAAEAAAAMZW5VUwAAACAAAAAcAEcAbwBvAGcAbABlACAASQBuAGMALgAgADIAMAAxADb/2wBDAAUDBAQEAwUEBAQFBQUGBwwIBwcHBw8LCwkMEQ8SEhEPERETFhwXExQaFRERGCEYGh0dHx8fExciJCIeJBweHx7/2wBDAQUFBQcGBw4ICA4eFBEUHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh7/wAARCAAEALoDASIAAhEBAxEB/8QAGAABAAMBAAAAAAAAAAAAAAAAAAQGBwj/xAAmEAABAgYCAgEFAAAAAAAAAAAAAQUCAxVllOEEERIxIQZRYZGh/8QAFAEBAAAAAAAAAAAAAAAAAAAAAP/EABQRAQAAAAAAAAAAAAAAAAAAAAD/2gAMAwEAAhEDEQA/AOc/oZ4no2TIp/G4nLiSPwSLkSvNekTv7+/n+IWGt2hpxtgAK3aGnG2K3aGnG2AArdoacbYrdoacbYACt2hpxtit2hpxtgAK3aGnG2K3aGnG2AArdoacbYrdoacbYACt2hpxtit2hpxtgAK3aGnG2K3aGnG2AArdoacbYrdoacbYACt2hpxtit2hpxtgAK3aGnG2K3aGnG2ABDenqKJq5Pg2tsqKGWsSRy5HjEip8++/wZpG5OEUaxLzeR2q9r1MVE/SegAP/9k=',
+  tinput: 'data:image/png;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSUNDX1BST0ZJTEUAAQEAAAHIAAAAAAQwAABtbnRyUkdCIFhZWiAH4AABAAEAAAAAAABhY3NwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAA9tYAAQAAAADTLQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlkZXNjAAAA8AAAACRyWFlaAAABFAAAABRnWFlaAAABKAAAABRiWFlaAAABPAAAABR3dHB0AAABUAAAABRyVFJDAAABZAAAAChnVFJDAAABZAAAAChiVFJDAAABZAAAAChjcHJ0AAABjAAAADxtbHVjAAAAAAAAAAEAAAAMZW5VUwAAAAgAAAAcAHMAUgBHAEJYWVogAAAAAAAAb6IAADj1AAADkFhZWiAAAAAAAABimQAAt4UAABjaWFlaIAAAAAAAACSgAAAPhAAAts9YWVogAAAAAAAA9tYAAQAAAADTLXBhcmEAAAAAAAQAAAACZmYAAPKnAAANWQAAE9AAAApbAAAAAAAAAABtbHVjAAAAAAAAAAEAAAAMZW5VUwAAACAAAAAcAEcAbwBvAGcAbABlACAASQBuAGMALgAgADIAMAAxADb/2wBDAAUDBAQEAwUEBAQFBQUGBwwIBwcHBw8LCwkMEQ8SEhEPERETFhwXExQaFRERGCEYGh0dHx8fExciJCIeJBweHx7/2wBDAQUFBQcGBw4ICA4eFBEUHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh7/wAARCAAVAMQDASIAAhEBAxEB/8QAGAABAQEBAQAAAAAAAAAAAAAAAAQCAwf/xAArEAABAwIHAAEDBAMAAAAAAAAAAgMEAZQFExVTVNLTEiExQRE0dLMiMlH/xAAUAQEAAAAAAAAAAAAAAAAAAAAA/8QAFBEBAAAAAAAAAAAAAAAAAAAAAP/aAAwDAQACEQMRAD8A8PmSVxnG2WWo1EUYaV/lHbVX9atprX61pWv3rU46hI24lo11GLfukfx2f6kkYFmoSNuJaNdRqEjbiWjXUjAFmoSNuJaNdRqEjbiWjXUjAFmoSNuJaNdRqEjbiWjXUjAFmoSNuJaNdRqEjbiWjXUjAFmoSNuJaNdRqEjbiWjXUjAFmoSNuJaNdRqEjbiWjXUjAFmoSNuJaNdRqEjbiWjXUjAFmoSNuJaNdRqEjbiWjXUjAFmoSNuJaNdRqEjbiWjXUjAFmoSNuJaNdRqEjbiWjXUjAFmoSNuJaNdRqEjbiWjXUjAFmJVotuI98G0rcYqpfwRRNK1o4un2p9PtSgE/9rh/8ev9rgA05JhPfBT8WRVyjaUVqh+iaV+KaJp9Kor+Kf8ATOZhvEl3KfMABmYbxJdynzGZhvEl3KfMABmYbxJdynzGZhvEl3KfMABmYbxJdynzGZhvEl3KfMABmYbxJdynzGZhvEl3KfMABmYbxJdynzGZhvEl3KfMABmYbxJdynzGZhvEl3KfMABmYbxJdynzGZhvEl3KfMABmYbxJdynzGZhvEl3KfMABmYbxJdynzGZhvEl3KfMABmYbxJdynzGZhvEl3KfMABmYbxJdynzGZhvEl3KfMADnMfQ9kpabU22038E0Uv5V/2qr61/Sn5VX8AAD//Z',
+};
+
+// Placeholder Minecraft-style skin (Steve face, pure CSS pixel art)
+function skinSVG(flip) {
+  const f = flip ? 'transform="scale(-1,1) translate(-56,0)"' : '';
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 8 8" ${f} style="image-rendering:pixelated">
+    <!-- head bg -->
+    <rect x="1" y="0" width="6" height="6" fill="#c68642"/>
+    <!-- eyes -->
+    <rect x="2" y="2" width="1" height="1" fill="#fff"/>
+    <rect x="5" y="2" width="1" height="1" fill="#fff"/>
+    <rect x="2" y="2" width="1" height="1" fill="#333"/>
+    <rect x="5" y="2" width="1" height="1" fill="#333"/>
+    <!-- nose -->
+    <rect x="3" y="3" width="2" height="1" fill="#a0522d"/>
+    <!-- mouth -->
+    <rect x="2" y="4" width="4" height="1" fill="#7b3f20"/>
+    <rect x="3" y="4" width="2" height="1" fill="#c68642"/>
+    <!-- hair -->
+    <rect x="1" y="0" width="6" height="1" fill="#5c3d1e"/>
+    <rect x="1" y="1" width="1" height="1" fill="#5c3d1e"/>
+    <rect x="6" y="1" width="1" height="1" fill="#5c3d1e"/>
+    <!-- body -->
+    <rect x="1" y="6" width="6" height="2" fill="#3b6eb5"/>
+  </svg>`;
+}
+
+let PREV_OPEN = false;
+let PREV_PAGE_ID = null;   // currently previewed page id
+let PREV_GIBBER_TIM = null; // interval handle
+let PREV_CHAR_IDX = 0;     // how many chars shown
+let PREV_FULL_TEXT = '';    // full resolved text
+let PREV_AC_TIM = null;    // auto-continue countdown interval
+let PREV_AC_LEFT = 0;      // seconds left
+let PREV_AC_TOTAL = 5;     // total duration
+
+// ── Toggle ────────────────────────────────────────────────
+function togglePreview() {
+  PREV_OPEN = !PREV_OPEN;
+  const panel = document.getElementById('prev-panel');
+  const btn   = document.getElementById('prev-btn');
+  if (panel) panel.classList.toggle('hidden', !PREV_OPEN);
+  if (btn)   btn.classList.toggle('active', PREV_OPEN);
+  if (PREV_OPEN) renderPreview();
+}
+
+// ── Called from everywhere that changes dialogue data ─────
+function renderPreview() {
+  if (!PREV_OPEN) return;
+  _prevStopAll();
+  const d = gD();
+  if (!d || !d.pages.length) { _prevShowEmpty(); return; }
+
+  // Populate page selector
+  const sel = document.getElementById('prev-page-sel');
+  if (sel) {
+    sel.innerHTML = d.pages.map(p => `<option value="${p.id}">${p.id}</option>`).join('');
+    if (!PREV_PAGE_ID || !d.pages.find(p => p.id === PREV_PAGE_ID))
+      PREV_PAGE_ID = d.pages[0].id;
+    sel.value = PREV_PAGE_ID;
+  }
+
+  _prevRenderWarnings(d);
+  _prevSyncNodeHighlight(PREV_PAGE_ID);
+  _prevShowPage(d, PREV_PAGE_ID);
+}
+
+function prevJumpTo(id) {
+  PREV_PAGE_ID = id;
+  _prevSyncNodeHighlight(id);
+  renderPreview();
+}
+
+function prevReplay() {
+  _prevStopAll();
+  const d = gD(); if (!d) return;
+  _prevShowPage(d, PREV_PAGE_ID);
+}
+
+function prevSkip() {
+  _prevStopGibber();
+  const el = document.getElementById('prev-text');
+  if (el) { el.innerHTML = _mcFormat(PREV_FULL_TEXT) + '<span id="prev-caret"></span>'; }
+}
+
+// ── Warnings ──────────────────────────────────────────────
+function _prevRenderWarnings(d) {
+  const wrap = document.getElementById('prev-warn'); if (!wrap) return;
+  const warns = [];
+  const byId = {};
+  d.pages.forEach(p => byId[p.id] = p);
+
+  // Check for broken links
+  d.pages.forEach(p => {
+    links(p).forEach(lk => {
+      if (lk.target && !byId[lk.target])
+        warns.push({type:'err', msg:`Page "${p.id}" links to unknown page "${lk.target}"`});
+    });
+  });
+
+  // Check init actions
+  d.settings.initActions.forEach(a => {
+    const m = a.match(/q\.dialogue\.set_page\('([^']+)'\)/);
+    if (m && !byId[m[1]])
+      warns.push({type:'err', msg:`Init action links to unknown page "${m[1]}"`});
+  });
+
+  // Check loops (BFS reachability from first page)
+  const visited = new Set();
+  const queue = d.pages.length ? [d.pages[0].id] : [];
+  while (queue.length) {
+    const cur = queue.shift();
+    if (visited.has(cur)) continue;
+    visited.add(cur);
+    const pg = byId[cur]; if (!pg) continue;
+    links(pg).forEach(lk => { if (lk.target && !visited.has(lk.target)) queue.push(lk.target); });
+  }
+  d.pages.forEach(p => {
+    if (!visited.has(p.id))
+      warns.push({type:'warn', msg:`Page "${p.id}" is unreachable from the first page`});
+  });
+
+  // Detect self-loops
+  d.pages.forEach(p => {
+    links(p).forEach(lk => { if (lk.target === p.id) warns.push({type:'warn', msg:`Page "${p.id}" links to itself (loop)`}); });
+  });
+
+  if (!warns.length) {
+    wrap.innerHTML = '<div class="pw ok">✓ No issues detected</div>';
+    setTimeout(() => { if(wrap) wrap.innerHTML = ''; }, 2000);
+    return;
+  }
+  wrap.innerHTML = warns.map(w => `<div class="pw ${w.type}">${w.type==='err'?'⚠':'⚡'} ${w.msg}</div>`).join('');
+}
+
+// ── Render a page ─────────────────────────────────────────
+function _prevShowPage(d, pageId) {
+  const byId = {}; d.pages.forEach(p => byId[p.id] = p);
+  const page = byId[pageId];
+  const wrap = document.getElementById('mc-dialogue');
+  if (!wrap) return;
+
+  if (!page) {
+    wrap.innerHTML = '<div style="color:#f66;font-size:12px;text-align:center;padding:20px">⚠ Page not found</div>';
+    return;
+  }
+
+  // Check for MiniMessage in this page's lines
+  _checkPageForMM(page);
+
+  // Resolve text lines — keep all markup intact; _mcFormat handles § and MiniMessage
+  const rawLines = (page.lines || []);
+  PREV_FULL_TEXT = rawLines.map(l => typeof l === 'string' ? l : (l.expression || '')).join('\n');
+  PREV_CHAR_IDX = 0;
+
+  const isPlayer = page.speaker === 'player';
+  const isInfoBox = !!page.background && page.background.includes('info');
+  const speakerName = isPlayer ? _getSpeakerName(d, 'player') : _getSpeakerName(d, 'npc');
+
+  // Build MC layout
+  const inp = page.input;
+  const inpType = inp?.type || (typeof inp === 'string' ? 'simple' : Array.isArray(inp) ? 'simple' : 'none');
+  const gibberInterval = (page.gibber?.interval ?? (isPlayer ? d.settings.speakers.player.gi : d.settings.speakers.npc.gi)) * 1000;
+  const gibberStep = page.gibber?.step ?? (isPlayer ? d.settings.speakers.player.gs : d.settings.speakers.npc.gs) ?? 4;
+  const portSide = isPlayer ? 'right' : 'left';
+  const portFrameSrc = isPlayer ? ASSETS.portR : ASSETS.portL;
+  const boxSrc = isInfoBox ? ASSETS.boxInfo : ASSETS.box;
+  const textClass = isInfoBox ? 'mc-text info-mode' : 'mc-text';
+  const caretClass = isInfoBox ? 'mc-cursor info' : 'mc-cursor';
+
+  const _portraitB64 = page._portrait || (isPlayer ? d.settings.speakers.player.portrait : d.settings.speakers.npc.portrait) || null;
+  const _portraitInner = _portraitB64
+    ? `<img src="${_portraitB64}" class="skin-render" style="width:56px;height:56px;image-rendering:pixelated"/>`
+    : skinSVG(isPlayer);
+  const portrait = `
+    <div class="mc-portrait-wrap ${portSide}">
+      <img class="mc-portrait-bg" src="${ASSETS.portBg}" alt=""/>
+      <img class="mc-portrait-frame" src="${portFrameSrc}" alt=""/>
+      <div class="mc-portrait-skin">${_portraitInner}</div>
+    </div>`;
+
+  const namebar = speakerName ? `
+    <div class="mc-namebar">
+      <img src="${ASSETS.name}" alt=""/>
+      <div class="mc-namebar-text"><span class="mc-coin"></span> ${speakerName}</div>
+    </div>` : '';
+
+  let bottomHTML = '';
+  if (inpType === 'option') {
+    const opts = inp.options || [];
+    const isHoriz = inp.vertical === false;
+    const optCls = isHoriz ? 'mc-options horizontal' : 'mc-options';
+    bottomHTML = `<div class="${optCls}">${
+      opts.map((o,i) => {
+        const label = typeof o.text === 'string' ? o.text : (o.text?.expression || o.value || 'Option');
+        const cleanLabel = label.replace(/§[0-9a-fk-or]/gi,'');
+        const targetPageId = _firstSetPage(Array.isArray(o.action)?o.action:[o.action]);
+        // Build tooltip: page id + first line snippet
+        let tipHTML = '';
+        if (targetPageId) {
+          const tp = d.pages.find(p => p.id === targetPageId);
+          const firstLine = tp?.lines?.[0];
+          const snippet = (typeof firstLine === 'string' ? firstLine : (firstLine?.expression || ''))
+            .replace(/§[0-9a-fk-or]/gi,'').replace(/<[^>]+>/g,'').substring(0, 60);
+          tipHTML = `<div class="mc-btn-tip">
+            <div class="mc-btn-tip-dest">→ ${targetPageId}</div>
+            ${snippet ? `<div class="mc-btn-tip-line">"${snippet}${snippet.length>=60?'…':''}"</div>` : ''}
+          </div>`;
+        }
+        return `<div class="mc-btn" onclick="prevNavTo('${targetPageId||''}')">
+          <span class="mc-btn-txt">${cleanLabel}</span>
+          ${tipHTML}
+        </div>`;
+      }).join('')
+    }</div>`;
+  } else if (inpType === 'auto-continue') {
+    const delay = inp.delay ?? 5;
+    PREV_AC_TOTAL = delay;
+    PREV_AC_LEFT  = delay;
+    bottomHTML = `<div class="mc-timer-wrap">
+      <img class="mc-timer-track" src="${ASSETS.timer}" alt=""/>
+      <div class="mc-timer-fill" id="prev-timer-fill" style="width:100%"></div>
+    </div>`;
+  } else if (inpType === 'text') {
+    bottomHTML = `<div class="mc-input-area">
+      <img src="${ASSETS.tinput}" alt=""/>
+      <span class="mc-input-hint">Type here…</span>
+    </div>`;
+  } else if (inpType === 'none' || inpType === 'simple') {
+    const nextPage = typeof inp === 'string' ? _firstSetPage([inp]) : (Array.isArray(inp) ? _firstSetPage(inp) : '');
+    bottomHTML = `<div class="mc-click-cue" onclick="prevNavTo('${nextPage}')" style="cursor:pointer" title="${nextPage?'→ '+nextPage:'closes'}">▼ click to continue</div>`;
+  }
+
+  const contentPad = isPlayer ? 'mc-box-content player-right' : 'mc-box-content';
+
+  wrap.innerHTML = `
+    <div class="mc-wrap">
+      ${portrait}
+      ${namebar}
+      <div class="mc-box">
+        <img class="mc-box-bg" src="${boxSrc}" alt=""/>
+        <div class="${contentPad}">
+          <div class="${textClass}" id="prev-text"><span id="prev-caret" class="${caretClass}"></span></div>
+        </div>
+      </div>
+      <div class="mc-bottom">${bottomHTML}</div>
+    </div>`;
+
+  // Start gibber typewriter
+  _prevStartGibber(gibberInterval, gibberStep, caretClass);
+
+  // Start auto-continue countdown after gibber or immediately
+  if (inpType === 'auto-continue') {
+    const acDelay = inp?.delay ?? 5;
+    PREV_AC_TOTAL = acDelay; PREV_AC_LEFT = acDelay;
+    _prevStartAC(acDelay, inp);
+  }
+}
+
+function _prevStartGibber(intervalMs, step, caretClass) {
+  const clampedMs = Math.max(20, Math.min(intervalMs, 500));
+  _prevStopGibber();
+
+  // Build a list of "safe slice points" — indices in PREV_FULL_TEXT that fall
+  // after a complete token (visible char, §XX code, or <tag>), never mid-token.
+  // PREV_CHAR_IDX now indexes into this array, not the raw string directly.
+  const text = PREV_FULL_TEXT;
+  const safePoints = []; // raw string positions that are valid slice boundaries
+  let i = 0;
+  while (i < text.length) {
+    if (text[i] === '§' && i + 1 < text.length) {
+      i += 2; // skip §X as one token
+    } else if (text[i] === '<') {
+      const end = text.indexOf('>', i);
+      i = end !== -1 ? end + 1 : i + 1; // skip <tag> as one token
+    } else {
+      i++; // one visible character
+    }
+    safePoints.push(i);
+  }
+
+  const el = () => document.getElementById('prev-text');
+  const update = () => {
+    const e = el(); if (!e) { _prevStopGibber(); return; }
+    if (PREV_CHAR_IDX >= safePoints.length) {
+      e.innerHTML = _mcFormat(text) + `<span id="prev-caret" class="${caretClass}"></span>`;
+      _prevStopGibber(); return;
+    }
+    PREV_CHAR_IDX = Math.min(PREV_CHAR_IDX + step, safePoints.length);
+    const rawEnd = safePoints[PREV_CHAR_IDX - 1] ?? text.length;
+    const shown = text.slice(0, rawEnd);
+    e.innerHTML = _mcFormat(shown) + `<span id="prev-caret" class="${caretClass}"></span>`;
+  };
+  update();
+  PREV_GIBBER_TIM = setInterval(update, clampedMs);
+}
+
+function _prevStartAC(delay, inp) {
+  _prevStopAC();
+  const fill = () => document.getElementById('prev-timer-fill');
+  const tick = () => {
+    PREV_AC_LEFT = Math.max(0, PREV_AC_LEFT - 0.1);
+    const pct = (PREV_AC_LEFT / PREV_AC_TOTAL) * 100;
+    const f = fill(); if (f) f.style.width = pct + '%';
+    if (PREV_AC_LEFT <= 0) {
+      _prevStopAC();
+      const target = _firstSetPage(typeof inp?.action === 'string' ? [inp.action] : (Array.isArray(inp?.action) ? inp.action : []));
+      prevNavTo(target);
+    }
+  };
+  PREV_AC_TIM = setInterval(tick, 100);
+}
+
+function _prevStopGibber() { if (PREV_GIBBER_TIM) { clearInterval(PREV_GIBBER_TIM); PREV_GIBBER_TIM = null; } }
+function _prevStopAC()    { if (PREV_AC_TIM)    { clearInterval(PREV_AC_TIM);    PREV_AC_TIM = null; } }
+function _prevStopAll()   { _prevStopGibber(); _prevStopAC(); }
+
+// Highlight the canvas node whose page.id matches PREV_PAGE_ID
+function _prevSyncNodeHighlight(pageId) {
+  const d = gD(); if (!d) return;
+  const page = d.pages.find(p => p.id === pageId);
+  if (!page) return;
+  // Update SEL and re-apply class to every node without a full renderCanvas()
+  SEL = page._uid;
+  document.querySelectorAll('#cv .node[data-uid]').forEach(n => {
+    const uid = n.dataset.uid;
+    if (uid === '__init__') return;
+    const p = d.pages.find(x => x._uid === uid);
+    if (!p) return;
+    const isExp = EXPANDED_NODES.has(uid);
+    n.className = 'node type-' + p.speaker + (SEL === uid ? ' selected' : '') + (isExp ? ' expanded' : '');
+  });
+}
+
+function prevNavTo(pageId) {
+  if (!pageId) return;
+  _prevStopAll();
+  const d = gD(); if (!d) return;
+  const target = d.pages.find(p => p.id === pageId);
+  if (!target) { toast('⚠ Page "'+pageId+'" not found'); return; }
+  PREV_PAGE_ID = pageId;
+  const sel = document.getElementById('prev-page-sel');
+  if (sel) sel.value = pageId;
+  _prevSyncNodeHighlight(pageId);
+  _prevRenderWarnings(d);
+  _prevShowPage(d, pageId);
+}
+
+function _prevShowEmpty() {
+  const wrap = document.getElementById('mc-dialogue');
+  if (wrap) wrap.innerHTML = '<div style="color:var(--dim);font-size:12px;text-align:center;padding:30px">No pages yet — add one from the sidebar</div>';
+  const ww = document.getElementById('prev-warn'); if (ww) ww.innerHTML = '';
+}
+
+// ── Helpers ───────────────────────────────────────────────
+function _getSpeakerName(d, which) {
+  const expr = d.settings.speakers[which]?.nameExpr || '';
+  if (expr === 'q.npc.name')        return 'NPC';
+  if (expr === 'q.player.username') return 'Player';
+  return expr.replace(/q\.(npc|player)\./g,'').replace(/[()]/g,'') || (which === 'npc' ? 'NPC' : 'Player');
+}
+
+function _firstSetPage(actions) {
+  for (const a of (actions||[])) {
+    if (typeof a !== 'string') continue;
+    const m = a.match(/q\.dialogue\.set_page\('([^']+)'\)/);
+    if (m) return m[1];
+  }
+  return '';
+}
+
+// ── MiniMessage detection ─────────────────────────────────
+// Matches <color>, <red>, <bold>, <gradient:...>, <#hex>, etc.
+const MM_PATTERN = /<(?:#[0-9a-fA-F]{3,6}|color:[^>]+|red|green|blue|yellow|gold|aqua|white|black|dark_red|dark_green|dark_blue|dark_aqua|dark_gray|dark_purple|gray|light_purple|bold|italic|underlined|strikethrough|obfuscated|gradient(?::[^>]*)?|rainbow(?::[^>]*)?|\/[a-z_]+)[^>]*>/i;
+
+let MM_WARNING_DISMISSED = false; // session-level dismiss
+
+function _hasMiniMessage(text) {
+  return MM_PATTERN.test(typeof text === 'string' ? text : '');
+}
+
+function _checkPageForMM(page) {
+  if (MM_WARNING_DISMISSED) return;
+  const lines = page?.lines || [];
+  const hasAny = lines.some(l => _hasMiniMessage(typeof l === 'string' ? l : (l?.expression || '')));
+  if (hasAny) showMMWarning();
+}
+
+function showMMWarning() {
+  const el = document.getElementById('mm-warning');
+  if (el) el.classList.add('open');
+}
+
+function closeMMWarning(dismiss) {
+  const el = document.getElementById('mm-warning');
+  if (el) el.classList.remove('open');
+  if (dismiss) MM_WARNING_DISMISSED = true;
+}
+
+// ── Parse §-codes AND MiniMessage into styled spans ──────
+const _MM_COLORS = {
+  black:'#000000', dark_blue:'#0000AA', dark_green:'#00AA00', dark_aqua:'#00AAAA',
+  dark_red:'#AA0000', dark_purple:'#AA00AA', gold:'#FFAA00', gray:'#AAAAAA',
+  dark_gray:'#555555', blue:'#5555FF', green:'#55FF55', aqua:'#55FFFF',
+  red:'#FF5555', light_purple:'#FF55FF', yellow:'#FFFF55', white:'#FFFFFF',
+};
+
+function _mcFormat(text) {
+  if (!text) return '';
+  const safe = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/\n/g,'<br>');
+
+  // ── Pass 1: MiniMessage tag parsing ──────────────────────
+  // Convert <tag> sequences into a flat token stream, then render
+  if (MM_PATTERN.test(text)) {
+    // Stack-based renderer for nested MM tags
+    let result = '';
+    let stack = []; // [{tag, style}]
+    let i = 0;
+    const openSpan = (style) => style ? `<span style="${style}">` : `<span>`;
+
+    while (i < text.length) {
+      // Check for §-code inside MM text
+      if (text[i] === '§' && i+1 < text.length) {
+        const mcMap = {'0':'#000','1':'#0000AA','2':'#00AA00','3':'#00AAAA','4':'#AA0000','5':'#AA00AA','6':'#FFAA00','7':'#AAAAAA','8':'#555555','9':'#5555FF','a':'#55FF55','b':'#55FFFF','c':'#FF5555','d':'#FF55FF','e':'#FFFF55','f':'#FFFFFF'};
+        const c = text[i+1].toLowerCase();
+        const col = mcMap[c];
+        if (col) result += `<span style="color:${col}">`;
+        else if (c === 'l') result += '<strong>';
+        else if (c === 'o') result += '<em>';
+        else if (c === 'r') result += '</span>';
+        i += 2;
+        continue;
+      }
+
+      // Check for MM tag
+      if (text[i] === '<') {
+        const end = text.indexOf('>', i);
+        if (end !== -1) {
+          const raw = text.slice(i+1, end).trim();
+          const isClose = raw.startsWith('/');
+          const tagName = isClose ? raw.slice(1).toLowerCase() : raw.split(':')[0].toLowerCase();
+
+          if (isClose) {
+            // Pop until we close this tag
+            const idx = [...stack].reverse().findIndex(s => s.tag === tagName);
+            if (idx !== -1) {
+              const closeCount = idx + 1;
+              for (let k = 0; k < closeCount; k++) { result += '</span>'; stack.pop(); }
+            }
+          } else {
+            // Determine style
+            let style = '';
+            if (_MM_COLORS[tagName]) {
+              style = `color:${_MM_COLORS[tagName]}`;
+            } else if (tagName === 'color' && raw.includes(':')) {
+              const val = raw.split(':')[1].trim();
+              style = `color:${_MM_COLORS[val] || val}`;
+            } else if (tagName.startsWith('#')) {
+              style = `color:${tagName}`;
+            } else if (tagName === 'bold') {
+              style = 'font-weight:bold';
+            } else if (tagName === 'italic') {
+              style = 'font-style:italic';
+            } else if (tagName === 'underlined') {
+              style = 'text-decoration:underline';
+            } else if (tagName === 'strikethrough') {
+              style = 'text-decoration:line-through';
+            } else if (tagName === 'gradient') {
+              // Simple two-stop gradient approximation
+              const parts = raw.split(':').slice(1);
+              const c1 = _MM_COLORS[parts[0]] || parts[0] || '#fff';
+              const c2 = _MM_COLORS[parts[1]] || parts[1] || '#aaa';
+              style = `background:linear-gradient(90deg,${c1},${c2});-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text`;
+            } else if (tagName === 'rainbow') {
+              style = 'background:linear-gradient(90deg,#f00,#f90,#ff0,#0f0,#09f,#00f,#90f);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text';
+            }
+            result += openSpan(style);
+            stack.push({ tag: tagName });
+          }
+          i = end + 1;
+          continue;
+        }
+      }
+
+      // Regular character
+      result += safe(text[i]);
+      i++;
+    }
+    // Close any unclosed spans
+    for (let k = 0; k < stack.length; k++) result += '</span>';
+    return result || safe(text);
+  }
+
+  // ── Pass 2: § code only (original path) ─────────────────
+  const mcMap = {'0':'#000','1':'#0000AA','2':'#00AA00','3':'#00AAAA','4':'#AA0000','5':'#AA00AA','6':'#FFAA00','7':'#AAAAAA','8':'#555555','9':'#5555FF','a':'#55FF55','b':'#55FFFF','c':'#FF5555','d':'#FF55FF','e':'#FFFF55','f':'#FFFFFF'};
+  let out = '', bold = false, italic = false, color = null;
+  const openSpan2 = () => `<span style="${color?'color:'+color+';':''}${bold?'font-weight:bold;':''}${italic?'font-style:italic;':''}">`;
+  let chunk = '';
+  const flush = () => { if (chunk) { out += openSpan2() + safe(chunk) + '</span>'; chunk = ''; } };
+  let j = 0;
+  while (j < text.length) {
+    if (text[j]==='§' && j+1<text.length) {
+      flush();
+      const c = text[j+1].toLowerCase();
+      if (mcMap[c])   color = mcMap[c];
+      else if (c==='l') bold = true;
+      else if (c==='o') italic = true;
+      else if (c==='r') { color=null; bold=false; italic=false; }
+      j += 2;
+    } else {
+      chunk += text[j++];
+    }
+  }
+  flush();
+  return out || safe(text);
+}
+
+
+// ══════════════════════════════════════════════════════════════════════════════
+// UNDO / REDO
+// ══════════════════════════════════════════════════════════════════════════════
+let UNDO_STACK = [], REDO_STACK = [];
+const MAX_UNDO = 40;
+
+function _snapshot() {
+  const snap = JSON.stringify({ DL, AID, INX, INY });
+  if (UNDO_STACK.length && UNDO_STACK[UNDO_STACK.length-1] === snap) return;
+  UNDO_STACK.push(snap);
+  if (UNDO_STACK.length > MAX_UNDO) UNDO_STACK.shift();
+  REDO_STACK = [];
+  _autoSave();
+}
+
+function doUndo() {
+  if (UNDO_STACK.length < 2) { toast('Nothing to undo'); return; }
+  REDO_STACK.push(UNDO_STACK.pop());
+  const state = JSON.parse(UNDO_STACK[UNDO_STACK.length-1]);
+  _restoreState(state); toast('Undo');
+}
+
+function doRedo() {
+  if (!REDO_STACK.length) { toast('Nothing to redo'); return; }
+  const snap = REDO_STACK.pop();
+  UNDO_STACK.push(snap);
+  _restoreState(JSON.parse(snap)); toast('Redo');
+}
+
+function _restoreState(state) {
+  DL = state.DL; AID = state.AID; INX = state.INX; INY = state.INY;
+  EXPANDED_NODES.clear(); BULK_SEL.clear();
+  closeEd(); renderTabs(); renderCanvas();
+}
+
+// Snapshot on every meaningful mutation
+const _origAddPage = addPage;
+addPage = function(spk, x, y) { _snapshot(); _origAddPage(spk, x, y); };
+const _origDelPage = delPage;
+delPage = function(u) { _snapshot(); _origDelPage(u); };
+const _origSaveEdit2 = saveEdit;
+saveEdit = function() { _snapshot(); _origSaveEdit2(); };
+const _origSaveSettings2 = saveSettings;
+saveSettings = function() { _snapshot(); _origSaveSettings2(); };
+
+// ══════════════════════════════════════════════════════════════════════════════
+// AUTOSAVE (localStorage)
+// ══════════════════════════════════════════════════════════════════════════════
+const AS_KEY = 'cdb_autosave_v1';
+let _asTim = null;
+
+function _autoSave() {
+  clearTimeout(_asTim);
+  _asTim = setTimeout(() => {
+    try {
+      localStorage.setItem(AS_KEY, JSON.stringify({ DL, AID, INX, INY, DB, ts: Date.now() }));
+      const dot = document.getElementById('as-dot');
+      if (dot) { dot.classList.add('saved'); setTimeout(() => dot.classList.remove('saved'), 1200); }
+    } catch(e) {}
+  }, 1500);
+}
+
+function _tryRestoreAutosave() {
+  try {
+    const raw = localStorage.getItem(AS_KEY);
+    if (!raw) return false;
+    const state = JSON.parse(raw);
+    const age = Date.now() - (state.ts || 0);
+    if (age > 7 * 24 * 3600 * 1000) return false; // ignore if >7 days old
+    const ago = age < 60000 ? 'just now' : age < 3600000 ? Math.round(age/60000)+'m ago' : Math.round(age/3600000)+'h ago';
+    if (!confirm(`Restore autosaved session from ${ago}?`)) return false;
+    DL = state.DL || DL;
+    AID = state.AID || AID;
+    INX = state.INX ?? INX;
+    INY = state.INY ?? INY;
+    if (state.DB) DB = state.DB;
+    renderDB(); renderTabs(); renderCanvas();
+    return true;
+  } catch(e) { return false; }
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// TOOLBAR COLLAPSE
+// ══════════════════════════════════════════════════════════════════════════════
+let _tbCollapsed = false;
+function toggleToolbar() {
+  _tbCollapsed = !_tbCollapsed;
+  const tools = document.getElementById('tb-tools');
+  const btn   = document.getElementById('tb-collapse-btn');
+  if (tools) tools.classList.toggle('collapsed', _tbCollapsed);
+  if (btn)   { btn.textContent = _tbCollapsed ? '»»' : '‹‹'; btn.classList.toggle('collapsed', _tbCollapsed); }
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// THEME TOGGLE
+// ══════════════════════════════════════════════════════════════════════════════
+let _dark = true;
+function toggleTheme() {
+  _dark = !_dark;
+  document.body.classList.toggle('theme-light', !_dark);
+  const btn = document.getElementById('theme-btn');
+  if (btn) btn.textContent = _dark ? '◑ Theme' : '◐ Theme';
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// FIT TO VIEW
+// ══════════════════════════════════════════════════════════════════════════════
+function fitView() {
+  const d = gD(); if (!d || !d.pages.length) { resetView(); return; }
+  const cw = document.getElementById('cw'); if (!cw) return;
+  const cwr = cw.getBoundingClientRect();
+  const xs = d.pages.map(p => p.x), ys = d.pages.map(p => p.y);
+  const minX = Math.min(...xs, INX) - 20;
+  const minY = Math.min(...ys, INY) - 20;
+  const maxX = Math.max(...xs.map((x,i) => x + (EXPANDED_NODES.has(d.pages[i]._uid)?340:220)), INX + 380) + 20;
+  const maxY = Math.max(...ys.map((y,i) => y + estimH(d.pages[i])), INY + 120) + 20;
+  const contentW = maxX - minX, contentH = maxY - minY;
+  const scaleX = cwr.width / contentW, scaleY = cwr.height / contentH;
+  SC = Math.min(scaleX, scaleY, 1.5);
+  TX = -minX * SC + (cwr.width - contentW * SC) / 2;
+  TY = -minY * SC + (cwr.height - contentH * SC) / 2;
+  applyT();
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// SNAP TO GRID
+// ══════════════════════════════════════════════════════════════════════════════
+let SNAP_GRID = false;
+const SNAP_SIZE = 40;
+
+function toggleSnapGrid() {
+  SNAP_GRID = !SNAP_GRID;
+  const cv = document.getElementById('cv');
+  if (cv) cv.classList.toggle('snap-grid', SNAP_GRID);
+  const btn = document.getElementById('snap-btn');
+  if (btn) btn.classList.toggle('active', SNAP_GRID);
+  toast(SNAP_GRID ? 'Snap on' : 'Snap off');
+}
+
+function _snapVal(v) {
+  return SNAP_GRID ? Math.round(v / SNAP_SIZE) * SNAP_SIZE : v;
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// BULK SELECT (shift+drag on canvas)
+// ══════════════════════════════════════════════════════════════════════════════
+let BULK_SEL = new Set(); // set of page._uid
+let BSEL_DRAG = false, BSEL_SX = 0, BSEL_SY = 0;
+let BULK_MOVE = null; // { startX, startY, pages: [{uid,x,y}] }
+
+function _startBulkSel(e) {
+  const cw = document.getElementById('cw'); if (!cw) return;
+  const r = cw.getBoundingClientRect();
+  const cx = (e.clientX - r.left - TX) / SC;
+  const cy = (e.clientY - r.top  - TY) / SC;
+  BSEL_DRAG = true; BSEL_SX = e.clientX; BSEL_SY = e.clientY;
+  const rect = document.getElementById('sel-rect');
+  if (rect) { rect.style.cssText = `display:block;left:${e.clientX-r.left}px;top:${e.clientY-r.top}px;width:0;height:0`; }
+}
+
+function _updateBulkSel(e) {
+  if (!BSEL_DRAG) return;
+  const cw = document.getElementById('cw'); if (!cw) return;
+  const r = cw.getBoundingClientRect();
+  const x = Math.min(BSEL_SX, e.clientX) - r.left;
+  const y = Math.min(BSEL_SY, e.clientY) - r.top;
+  const w = Math.abs(e.clientX - BSEL_SX);
+  const h = Math.abs(e.clientY - BSEL_SY);
+  const rect = document.getElementById('sel-rect');
+  if (rect) rect.style.cssText = `display:block;left:${x}px;top:${y}px;width:${w}px;height:${h}px`;
+  // Compute canvas coords of selection
+  const cx1 = (Math.min(BSEL_SX, e.clientX) - r.left - TX) / SC;
+  const cy1 = (Math.min(BSEL_SY, e.clientY) - r.top  - TY) / SC;
+  const cx2 = cx1 + w / SC, cy2 = cy1 + h / SC;
+  const d = gD(); if (!d) return;
+  BULK_SEL.clear();
+  d.pages.forEach(p => {
+    const pw = EXPANDED_NODES.has(p._uid) ? 340 : 220;
+    const ph = estimH(p);
+    if (p.x + pw >= cx1 && p.x <= cx2 && p.y + ph >= cy1 && p.y <= cy2) BULK_SEL.add(p._uid);
+  });
+  _applyBulkSelClasses();
+}
+
+function _endBulkSel() {
+  BSEL_DRAG = false;
+  const rect = document.getElementById('sel-rect');
+  if (rect) rect.style.display = 'none';
+  if (BULK_SEL.size) toast(`${BULK_SEL.size} nodes selected`);
+}
+
+function _applyBulkSelClasses() {
+  document.querySelectorAll('.node').forEach(n => {
+    if (n.dataset.uid === '__init__') return;
+    n.classList.toggle('bulk-selected', BULK_SEL.has(n.dataset.uid));
+  });
+}
+
+function _startBulkMove(e, page) {
+  if (!BULK_SEL.has(page._uid)) return false;
+  const d = gD(); if (!d) return false;
+  BULK_MOVE = {
+    startX: e.clientX, startY: e.clientY,
+    pages: Array.from(BULK_SEL).map(uid => {
+      const p = d.pages.find(x => x._uid === uid);
+      return p ? { uid, x: p.x, y: p.y } : null;
+    }).filter(Boolean)
+  };
+  return true;
+}
+
+function _moveBulk(e) {
+  if (!BULK_MOVE) return;
+  const dx = (e.clientX - BULK_MOVE.startX) / SC;
+  const dy = (e.clientY - BULK_MOVE.startY) / SC;
+  const d = gD(); if (!d) return;
+  BULK_MOVE.pages.forEach(({uid, x, y}) => {
+    const p = d.pages.find(pg => pg._uid === uid); if (!p) return;
+    p.x = _snapVal(Math.max(0, x + dx));
+    p.y = _snapVal(Math.max(0, y + dy));
+    const el = document.querySelector(`.node[data-uid="${uid}"]`);
+    if (el) { el.style.left = p.x+'px'; el.style.top = p.y+'px'; }
+  });
+  renderConn(); updateMM();
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// DUPLICATE DIALOGUE TAB
+// ══════════════════════════════════════════════════════════════════════════════
+function dupDialogue() {
+  const d = gD(); if (!d) return;
+  const clone = JSON.parse(JSON.stringify(d));
+  const newId = uid();
+  clone.id = newId;
+  clone.name = d.name + ' (copy)';
+  clone.pages = clone.pages.map(p => ({ ...p, _uid: uid() }));
+  DL.push(clone);
+  AID = newId;
+  EXPANDED_NODES.clear(); BULK_SEL.clear();
+  renderTabs(); renderCanvas();
+  _snapshot();
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// LIVE VALIDATION
+// ══════════════════════════════════════════════════════════════════════════════
+function validateAll() {
+  const d = gD(); if (!d) return [];
+  const issues = [];
+  const byId = {};
+  d.pages.forEach(p => {
+    if (byId[p.id]) issues.push({ sev:'err', msg:`Duplicate page ID: "${p.id}"` });
+    byId[p.id] = p;
+  });
+  d.pages.forEach(p => {
+    const ls = links(p);
+    ls.forEach(l => {
+      if (l.target && !byId[l.target]) issues.push({ sev:'err', msg:`"${p.id}" → unknown page "${l.target}"` });
+    });
+    if (p.input?.type === 'option') {
+      (p.input.options||[]).forEach((o,i) => {
+        const acts = Array.isArray(o.action) ? o.action : [o.action||''];
+        const hasAny = acts.some(a => typeof a==='string' && a.trim());
+        if (!hasAny) issues.push({ sev:'warn', msg:`"${p.id}" option ${i+1} has no action` });
+        // check save_data paired with data write
+        const writes = acts.some(a => typeof a==='string' && a.includes('q.player.data') && a.includes('= true'));
+        const saves  = acts.some(a => typeof a==='string' && a.includes('save_data'));
+        if (writes && !saves) issues.push({ sev:'warn', msg:`"${p.id}" sets flag but no save_data()` });
+      });
+    }
+  });
+  // Reachability BFS
+  const visited = new Set();
+  const queue = d.settings.initActions.map(a => {
+    const m = a.match(/q\.dialogue\.set_page\('([^']+)'\)/);
+    return m ? m[1] : null;
+  }).filter(Boolean);
+  if (!queue.length && d.pages.length) queue.push(d.pages[0].id);
+  while (queue.length) {
+    const cur = queue.shift();
+    if (visited.has(cur)) continue;
+    visited.add(cur);
+    const pg = byId[cur]; if (!pg) continue;
+    links(pg).forEach(l => { if (l.target && !visited.has(l.target)) queue.push(l.target); });
+  }
+  d.pages.forEach(p => {
+    if (!visited.has(p.id)) issues.push({ sev:'warn', msg:`"${p.id}" is unreachable` });
+  });
+  return issues;
+}
+
+function toggleValPanel() {
+  const panel = document.getElementById('val-panel');
+  const btn   = document.getElementById('val-btn');
+  if (!panel) return;
+  if (panel.classList.contains('open')) {
+    panel.classList.remove('open');
+    if (btn) btn.classList.remove('active');
+    return;
+  }
+  const issues = validateAll();
+  if (!issues.length) {
+    panel.innerHTML = '<div class="val-ok">✓ No issues found</div>';
+  } else {
+    panel.innerHTML = issues.map(i =>
+      `<div class="val-item"><span class="val-icon">${i.sev==='err'?'⚠':'⚡'}</span><span class="val-msg">${i.msg}</span></div>`
+    ).join('');
+  }
+  panel.classList.add('open');
+  if (btn) btn.classList.add('active');
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// FIND & REPLACE
+// ══════════════════════════════════════════════════════════════════════════════
+function toggleFR() {
+  const bar = document.getElementById('fr-bar');
+  if (!bar) return;
+  bar.classList.toggle('open');
+  if (bar.classList.contains('open')) setTimeout(() => document.getElementById('fr-find')?.focus(), 50);
+}
+function closeFR() {
+  const bar = document.getElementById('fr-bar');
+  if (bar) bar.classList.remove('open');
+}
+function frCount() {
+  const find = document.getElementById('fr-find')?.value || '';
+  const el = document.getElementById('fr-count'); if (!el) return;
+  if (!find) { el.textContent = ''; return; }
+  let n = 0;
+  DL.forEach(d => d.pages.forEach(p => {
+    const json = JSON.stringify(p.lines) + JSON.stringify(p.input||'');
+    n += (json.split(find).length - 1);
+  }));
+  el.textContent = n ? `${n} occurrence${n!==1?'s':''} across all dialogues` : 'No matches';
+}
+function doFR(thisOnly) {
+  const find = document.getElementById('fr-find')?.value || '';
+  const rep  = document.getElementById('fr-rep')?.value  || '';
+  if (!find) { toast('Enter a search term'); return; }
+  _snapshot();
+  const targets = thisOnly ? [gD()].filter(Boolean) : DL;
+  let count = 0;
+  targets.forEach(d => d.pages.forEach(p => {
+    const before = JSON.stringify(p);
+    // Replace in lines
+    p.lines = p.lines.map(l => {
+      if (typeof l === 'string') return l.split(find).join(rep);
+      if (l?.expression) return { ...l, expression: l.expression.split(find).join(rep) };
+      return l;
+    });
+    // Replace in input actions (strings only)
+    const repStr = s => typeof s === 'string' ? s.split(find).join(rep) : s;
+    const repArr = a => Array.isArray(a) ? a.map(repStr) : repStr(a);
+    if (p.input) {
+      if (typeof p.input === 'string') p.input = repStr(p.input);
+      else if (Array.isArray(p.input)) p.input = p.input.map(repStr);
+      else if (p.input.type === 'option') (p.input.options||[]).forEach(o => { o.action = repArr(o.action); });
+      else if (p.input.type === 'auto-continue') p.input.action = repArr(p.input.action);
+    }
+    if (JSON.stringify(p) !== before) count++;
+  }));
+  renderCanvas();
+  toast(`Replaced in ${count} page${count!==1?'s':''}`);
+  frCount();
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// NODE COLOUR TAGS
+// ══════════════════════════════════════════════════════════════════════════════
+const NODE_TAGS = { none:'', done:'tag-done', review:'tag-review', branch:'tag-branch' };
+let _tagUid = null;
+
+function ctx_tag(uid_arg) {
+  _tagUid = uid_arg || CTX_UID;
+  const page = gP(_tagUid); if (!page) return;
+  const current = page._tag || 'none';
+  const labels = { none:'None', done:'✅ Done', review:'⚠ Needs review', branch:'🔀 Branch point' };
+  const choice = prompt(`Tag node "${page.id}"\nOptions: none, done, review, branch\nCurrent: ${current}`, current);
+  if (choice === null) return;
+  const val = choice.trim().toLowerCase();
+  if (!NODE_TAGS.hasOwnProperty(val)) { toast('Invalid tag'); return; }
+  page._tag = val === 'none' ? undefined : val;
+  _snapshot(); renderCanvas();
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// EXPORT ZIP (all tabs)
+// ══════════════════════════════════════════════════════════════════════════════
+async function exportZip() {
+  // Simple ZIP using built-in CompressionStream if available, else plain files
+  if (typeof JSZip !== 'undefined') {
+    const zip = new JSZip();
+    DL.forEach(d => { const name = (d.name||'dialogue').toLowerCase().replace(/\s+/g,'_')+'.json'; zip.file(name, buildJ(d)); });
+    const blob = await zip.generateAsync({type:'blob'});
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'dialogues.zip'; a.click();
+    return;
+  }
+  // Fallback: download each file sequentially
+  for (const d of DL) {
+    const name = (d.name||'dialogue').toLowerCase().replace(/\s+/g,'_')+'.json';
+    const blob = new Blob([buildJ(d)], {type:'application/json'});
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; a.click();
+    await new Promise(r => setTimeout(r, 200));
+  }
+  toast(`Downloaded ${DL.length} file${DL.length!==1?'s':''}`);
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// MARKDOWN EXPORT
+// ══════════════════════════════════════════════════════════════════════════════
+function dlMarkdown() {
+  const d = gD(); if (!d) return;
+  const lines = [`# ${d.name}\n`];
+  const byId = {};
+  d.pages.forEach(p => byId[p.id] = p);
+  const visited = new Set();
+  const queue = [...d.settings.initActions.map(a => { const m = a.match(/set_page\('([^']+)'\)/); return m?m[1]:null; }).filter(Boolean)];
+  if (!queue.length && d.pages.length) queue.push(d.pages[0].id);
+  while (queue.length) {
+    const id = queue.shift();
+    if (visited.has(id)) continue;
+    visited.add(id);
+    const p = byId[id]; if (!p) continue;
+    const spk = p.speaker === 'player' ? '**[Player]**' : '**[NPC]**';
+    lines.push(`## ${id}\n${spk}\n`);
+    (p.lines||[]).forEach(l => {
+      const txt = typeof l === 'string' ? l : (l.expression || '');
+      lines.push(`> ${txt.replace(/§[0-9a-fk-or]/gi,'').replace(/<[^>]+>/g,'')}\n`);
+    });
+    if (p.input?.type === 'option') {
+      lines.push('');
+      (p.input.options||[]).forEach(o => {
+        const lbl = (typeof o.text==='string'?o.text:(o.text?.expression||'')).replace(/§[0-9a-fk-or]/gi,'');
+        const acts = Array.isArray(o.action)?o.action:[o.action||''];
+        const tgt = acts.map(a=>{const m=typeof a==='string'&&a.match(/set_page\('([^']+)'\)/);return m?m[1]:null;}).find(Boolean)||'';
+        lines.push(`- **${lbl}**${tgt?' → '+tgt:''}`);
+        if (tgt && !visited.has(tgt)) queue.push(tgt);
+      });
+    } else {
+      const ls = links(p);
+      ls.forEach(l => { if (l.target && !visited.has(l.target)) queue.push(l.target); });
+    }
+    lines.push('');
+  }
+  const md = lines.join('\n');
+  const blob = new Blob([md], {type:'text/markdown'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = (d.name||'dialogue').toLowerCase().replace(/\s+/g,'_')+'.md';
+  a.click();
+  toast('Markdown exported!');
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// PREVIEW BREADCRUMB
+// ══════════════════════════════════════════════════════════════════════════════
+let PREV_CRUMB = []; // array of pageId strings
+
+function _crumbPush(pageId) {
+  if (PREV_CRUMB[PREV_CRUMB.length-1] !== pageId) PREV_CRUMB.push(pageId);
+  _renderCrumb();
+}
+
+function _renderCrumb() {
+  const el = document.getElementById('prev-crumb'); if (!el) return;
+  const max = 5;
+  const slice = PREV_CRUMB.length > max ? PREV_CRUMB.slice(-max) : PREV_CRUMB;
+  const prefix = PREV_CRUMB.length > max ? '<span class="crumb-sep">… </span>' : '';
+  el.innerHTML = prefix + slice.map((id, i) =>
+    i === slice.length - 1
+      ? `<span style="color:var(--text);font-weight:700">${id}</span>`
+      : `<span class="crumb" onclick="prevNavTo('${id}')">${id}</span><span class="crumb-sep"> › </span>`
+  ).join('');
+}
+
+const _origPrevNavTo = prevNavTo;
+prevNavTo = function(pageId) {
+  _origPrevNavTo(pageId);
+  _crumbPush(pageId);
+};
+
+// ══════════════════════════════════════════════════════════════════════════════
+// FLAG SIMULATOR
+// ══════════════════════════════════════════════════════════════════════════════
+let FLAG_STATE = {}; // { 'dialogue.xxx': true/false }
+
+function renderFlagSim() {
+  const el = document.getElementById('fs-flags'); if (!el) return;
+  if (!DB.length) { el.innerHTML = '<div style="color:var(--dim);font-size:11px;font-style:italic">No flags in data bank</div>'; return; }
+  el.innerHTML = DB.map(k => {
+    const on = !!FLAG_STATE[k];
+    return `<div class="fs-row">
+      <label title="q.player.data.${k}">${k}</label>
+      <label class="fs-toggle">
+        <input type="checkbox" ${on?'checked':''} onchange="FLAG_STATE['${k}']=this.checked">
+        <span class="fs-slider"></span>
+      </label>
+    </div>`;
+  }).join('');
+}
+
+function simRoute() {
+  const d = gD(); if (!d) return;
+  if (!d.settings.initActions.length) { toast('No init actions to simulate'); return; }
+  const byId = {};
+  d.pages.forEach(p => byId[p.id] = p);
+  let routed = null;
+  for (const action of d.settings.initActions) {
+    const condMatch = action.match(/^(.+?)\s*\?\s*q\.dialogue\.set_page\('([^']+)'\)/);
+    if (condMatch) {
+      const cond = condMatch[1].trim();
+      const target = condMatch[2];
+      // Simple flag evaluator: supports q.player.data.xxx, == false, == true, && 
+      const eval_cond = _evalFlagCondition(cond);
+      if (eval_cond) { routed = target; break; }
+    } else {
+      const always = action.match(/q\.dialogue\.set_page\('([^']+)'\)/);
+      if (always) { routed = always[1]; break; }
+    }
+  }
+  if (routed) {
+    toast(`Routes to: ${routed}`);
+    if (PREV_OPEN) prevNavTo(routed);
+  } else {
+    toast('No conditions matched — falls to first page');
+  }
+}
+
+function _evalFlagCondition(cond) {
+  // Supports: q.player.data.xxx, == true, == false, &&, simple not (== false means flag is false)
+  const parts = cond.split('&&').map(s => s.trim());
+  return parts.every(part => {
+    const eqFalse = part.match(/q\.player\.data\.([a-zA-Z0-9_.]+)\s*==\s*false/);
+    const eqTrue  = part.match(/q\.player\.data\.([a-zA-Z0-9_.]+)\s*==\s*true/);
+    const plain   = part.match(/q\.player\.data\.([a-zA-Z0-9_.]+)/);
+    if (eqFalse) return !FLAG_STATE[eqFalse[1]];
+    if (eqTrue)  return !!FLAG_STATE[eqTrue[1]];
+    if (plain)   return !!FLAG_STATE[plain[1]];
+    return false;
+  });
+}
+
+// Patch renderDB to also refresh flag sim
+const _origRenderDB = renderDB;
+renderDB = function() { _origRenderDB(); renderFlagSim(); };
+
+// ══════════════════════════════════════════════════════════════════════════════
+// NPC SKIN PORTRAIT
+// ══════════════════════════════════════════════════════════════════════════════
+let _pendingSkinB64 = null;
+let _skinTarget = null; // 'npc' or 'player', or page._uid for per-page
+
+function openSkinModal(target) {
+  _skinTarget = target || 'npc';
+  _pendingSkinB64 = null;
+  const prev = document.getElementById('skin-preview');
+  if (prev) prev.innerHTML = '<div style="color:var(--dim);font-size:11px;font-style:italic">No portrait loaded</div>';
+  openModal('skin-modal');
+}
+
+function uploadSkin(input) {
+  const file = input.files?.[0]; if (!file) return;
+  const prev = document.getElementById('skin-preview');
+  const reader = new FileReader();
+  reader.onload = e => {
+    // Extract face (8x8 at x=8,y=8 on a 64x64 skin, scaled to 64x64)
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = 64; canvas.height = 64;
+      const ctx = canvas.getContext('2d');
+      ctx.imageSmoothingEnabled = false;
+      // Minecraft skin face region: x=8,y=8,w=8,h=8 (on 64x64 layout)
+      const scaleW = img.naturalWidth / 64;
+      const scaleH = img.naturalHeight / 64;
+      ctx.drawImage(img, 8*scaleW, 8*scaleH, 8*scaleW, 8*scaleH, 0, 0, 64, 64);
+      // Overlay hat layer (x=40,y=8,w=8,h=8)
+      ctx.drawImage(img, 40*scaleW, 8*scaleH, 8*scaleW, 8*scaleH, 0, 0, 64, 64);
+      _pendingSkinB64 = canvas.toDataURL('image/png');
+      if (prev) prev.innerHTML = `<img src="${_pendingSkinB64}" style="width:64px;height:64px;image-rendering:pixelated;border-radius:4px;border:2px solid var(--border)"/>`;
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function applySkin() {
+  if (!_pendingSkinB64) { toast('Load a skin first'); return; }
+  const d = gD();
+  if (_skinTarget === 'npc' || _skinTarget === 'player') {
+    if (d) d.settings.speakers[_skinTarget].portrait = _pendingSkinB64;
+  } else {
+    // Per-page portrait
+    const page = gP(_skinTarget);
+    if (page) page._portrait = _pendingSkinB64;
+  }
+  closeModal('skin-modal');
+  _snapshot(); renderCanvas(); renderPreview();
+  toast('Portrait applied!');
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// KEYBOARD SHORTCUTS
+// ══════════════════════════════════════════════════════════════════════════════
+function _kbHint(msg) {
+  const el = document.getElementById('kb-hint'); if (!el) return;
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(el._t); el._t = setTimeout(() => el.classList.remove('show'), 1600);
+}
+
+document.addEventListener('keydown', e => {
+  // Don't fire when typing in inputs/textareas
+  if (['INPUT','TEXTAREA','SELECT'].includes(e.target.tagName)) {
+    if (e.key === 'Escape') { e.target.blur(); }
+    return;
+  }
+  const ctrl = e.ctrlKey || e.metaKey;
+
+  if (ctrl && e.key === 'z') { e.preventDefault(); doUndo(); _kbHint('Ctrl+Z — Undo'); return; }
+  if (ctrl && (e.key === 'y' || (e.shiftKey && e.key === 'Z'))) { e.preventDefault(); doRedo(); _kbHint('Ctrl+Y — Redo'); return; }
+  if (ctrl && e.key === 'h') { e.preventDefault(); toggleFR(); _kbHint('Ctrl+H — Find & Replace'); return; }
+  if (ctrl && e.key === 'f') { e.preventDefault(); fitView(); _kbHint('Ctrl+F — Fit view'); return; }
+  if (ctrl && e.key === 'd') { e.preventDefault(); if (CTX_UID) ctx_act('dupe'); _kbHint('Ctrl+D — Duplicate'); return; }
+
+  if (e.key === 'Delete' || e.key === 'Backspace') {
+    if (BULK_SEL.size) {
+      e.preventDefault(); _snapshot();
+      Array.from(BULK_SEL).forEach(u => { const d=gD(); if(d) d.pages=d.pages.filter(p=>p._uid!==u); });
+      BULK_SEL.clear(); renderCanvas(); _kbHint('Delete — removed selected');
+      return;
+    }
+    if (SEL) { e.preventDefault(); const p=gP(SEL); if(p&&confirm(`Delete "${p.id}"?`)){ _snapshot(); delPage(SEL); SEL=null; } return; }
+  }
+
+  if (e.key === 'e' || e.key === 'E') {
+    if (SEL) { e.preventDefault(); openEd(SEL); _kbHint('E — Edit page'); return; }
+  }
+  if (e.key === 'Escape') { closeEd(); closeFR(); BULK_SEL.clear(); _applyBulkSelClasses(); }
+  if (e.key === 'a' && ctrl) { e.preventDefault(); const d=gD(); if(d){ BULK_SEL.clear(); d.pages.forEach(p=>BULK_SEL.add(p._uid)); _applyBulkSelClasses(); toast('All selected'); } }
+  if (ctrl && e.key === 's') { e.preventDefault(); _autoSave(); _kbHint('Ctrl+S — Saved'); }
+});
+
+
+// ── Hook into existing render/save calls ──────────────────
+// Use arrow-function reassignment — NOT function declarations.
+// function declarations are hoisted, so capturing renderCanvas into _orig
+// before the declaration would still resolve to the new version, causing
+// infinite recursion. Arrow assignments execute in order and are safe.
+(function() {
+  const _rc = renderCanvas;
+  renderCanvas = function() { _rc(); renderPreview(); };
+
+  const _se = saveEdit;
+  saveEdit = function() { _se(); renderPreview(); };
+
+  const _ss = saveSettings;
+  saveSettings = function() { _ss(); renderPreview(); };
+
+  const _sd = switchD;
+  switchD = function(id) { _sd(id); PREV_PAGE_ID = null; renderPreview(); };
+})();
+
+
+// ── MINIMAP CLICK NAVIGATE ─────────────────────────────────────────────────
+function mmClick(e) {
+  const cv = document.getElementById('mmc'); if (!cv) return;
+  const r  = cv.getBoundingClientRect();
+  const fx = (e.clientX - r.left) / r.width;
+  const fy = (e.clientY - r.top)  / r.height;
+  const d  = gD(); if (!d || !d.pages.length) return;
+  const xs = d.pages.map(p => p.x), ys = d.pages.map(p => p.y);
+  const mnX = Math.min(...xs)-20, mxX = Math.max(...xs)+240;
+  const mnY = Math.min(...ys)-20, mxY = Math.max(...ys)+120;
+  const targetX = mnX + fx * (mxX - mnX);
+  const targetY = mnY + fy * (mxY - mnY);
+  const cw = document.getElementById('cw'); if (!cw) return;
+  const cwr = cw.getBoundingClientRect();
+  TX = cwr.width/2  - targetX * SC;
+  TY = cwr.height/2 - targetY * SC;
+  applyT();
+}
+</script>
+</body>
+</html>
