@@ -1,4 +1,4 @@
-# cobblemon_npc_tools
+# Cobblemon NPC Tools
 ## NPC and Dialogue Builder for Cobblemon NPC creation
 ### What it does:
 **Node graph** — every page is a draggable node, arrows show how pages connect. Right-click the canvas to add pages
